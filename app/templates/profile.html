@@ -24,52 +24,91 @@
         .profile-title {
             font-weight: 800;
             letter-spacing: 1px;
-            font-size: 2rem;
+            font-size: 1.35rem;
             color: #222b45;
-            margin-bottom: 2rem;
+            margin-bottom: 1.1rem;
         }
 
         .section-block {
             background: #f8fafc;
-            border-radius: 1.1rem;
-            box-shadow: 0 2px 12px 0 rgba(59, 130, 246, 0.06);
-            padding: 1.5rem 1.2rem 1.2rem 1.2rem;
-            margin-bottom: 1.5rem;
-            border: 1.5px solid #e5e7eb;
+            border-radius: 0.8rem;
+            box-shadow: 0 1px 6px 0 rgba(59,130,246,0.04);
+            padding: 1.1rem 1rem 0.7rem 1rem;
+            margin-bottom: 1rem;
+            border: 1px solid #e5e7eb;
         }
 
         .section-title {
-            font-size: 1.1rem;
+            font-size: 1.01rem;
             font-weight: 700;
-            color: #3b82f6;
-            margin-bottom: 1.2rem;
-            letter-spacing: 0.5px;
+            color: #2563eb;
+            margin-bottom: 0.7rem;
+            letter-spacing: 0.3px;
         }
 
+        .form-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.7rem;
+        }
         .form-label {
+            flex: 0 0 80px;
+            margin-bottom: 0;
+            text-align: right;
+            margin-right: 1.1rem;
             color: #555;
             font-weight: 500;
+            font-size: 0.98rem;
         }
-
         .form-control, select, textarea {
-            border-radius: 0.8rem !important;
-            border: 1.5px solid #e5e7eb;
-            background: #fff;
-            transition: border-color 0.2s;
-            box-shadow: none;
+            flex: 1 1 auto;
+            min-width: 0;
         }
 
         .form-control:focus, select:focus, textarea:focus {
-            border-color: #3b82f6;
+            border-color: #2563eb;
             background: #f8fafc;
         }
 
-        textarea.form-control {
-            min-height: 60px;
+        textarea,
+        input[type="text"],
+        input[type="date"] {
+            scrollbar-width: thin;
+            scrollbar-color: #b4c5e4 #f1f3f9;
+            overflow-x: hidden;
+        }
+        textarea::-webkit-scrollbar,
+        input[type="text"]::-webkit-scrollbar,
+        input[type="date"]::-webkit-scrollbar {
+            width: 5px;
+            height: 0;
+            background: #f1f3f9;
+            border-radius: 6px;
+        }
+        textarea::-webkit-scrollbar-thumb,
+        input[type="text"]::-webkit-scrollbar-thumb,
+        input[type="date"]::-webkit-scrollbar-thumb {
+            background: #b4c5e4;
+            border-radius: 6px;
+        }
+        textarea::-webkit-scrollbar-thumb:hover,
+        input[type="text"]::-webkit-scrollbar-thumb:hover,
+        input[type="date"]::-webkit-scrollbar-thumb:hover {
+            background: #8fa7d3;
+        }
+        textarea::-webkit-scrollbar-button,
+        input[type="text"]::-webkit-scrollbar-button,
+        input[type="date"]::-webkit-scrollbar-button {
+            display: none;
+            height: 0;
+            width: 0;
         }
 
         .btn-success {
-            /* 使用Bootstrap默认样式 */
+            border-radius: 0.6rem;
+            font-weight: 700;
+            font-size: 1.01rem;
+            padding: 0.5rem 0;
         }
 
         .btn-primary {
@@ -105,10 +144,10 @@
         }
 
         .simple-section-title {
-            font-size: 1rem;
+            font-size: 0.97rem;
             font-weight: 600;
             color: #64748b;
-            margin: 1.5rem 0 0.5rem 0;
+            margin: 1.1rem 0 0.3rem 0;
         }
     </style>
 </head>
@@ -121,11 +160,11 @@
     <form method="post">
         <div class="section-block">
             <div class="section-title">基本信息</div>
-            <div class="mb-3">
+            <div class="form-row">
                 <label class="form-label">姓名</label>
                 <input class="form-control" name="name" type="text" value="{{ profile.name }}">
             </div>
-            <div class="mb-3">
+            <div class="form-row">
                 <label class="form-label">性别</label>
                 <select class="form-control" name="gender">
                     <option value="" {% if not profile.gender %}selected{% endif %}>请选择</option>
@@ -134,41 +173,37 @@
                     <option value="其他" {% if profile.gender=='其他' %}selected{% endif %}>其他</option>
                 </select>
             </div>
-            <div class="mb-3">
+            <div class="form-row">
                 <label class="form-label">生日</label>
                 <input class="form-control" name="birthday" type="date" value="{{ profile.birthday }}">
             </div>
         </div>
         <div class="section-block">
             <div class="section-title">财务信息</div>
-            <div class="mb-3">
+            <div class="form-row">
                 <label class="form-label">月收入</label>
                 <input class="form-control" name="monthly_income" type="text" value="{{ profile.monthly_income }}">
             </div>
-            <div class="mb-3">
+            <div class="form-row">
                 <label class="form-label">月支出</label>
                 <input class="form-control" name="monthly_expense" type="text" value="{{ profile.monthly_expense }}">
             </div>
         </div>
         <div class="section-block">
             <div class="section-title">工作职业</div>
-            <div class="mb-3">
+            <div class="form-row">
                 <label class="form-label">职业名称</label>
                 <input class="form-control" name="job" type="text" value="{{ profile.job }}">
             </div>
-            <div class="mb-3">
+            <div class="form-row">
                 <label class="form-label">公司</label>
                 <input class="form-control" name="company" type="text" value="{{ profile.company }}">
             </div>
         </div>
         <div class="simple-section-title">爱好</div>
-        <div class="mb-3">
-            <textarea class="form-control" name="hobby" rows="2">{{ profile.hobby }}</textarea>
-        </div>
+        <textarea class="form-control" name="hobby" rows="2">{{ profile.hobby }}</textarea>
         <div class="simple-section-title">技能</div>
-        <div class="mb-3">
-            <textarea class="form-control" name="skills" rows="2">{{ profile.skills }}</textarea>
-        </div>
+        <textarea class="form-control" name="skills" rows="2">{{ profile.skills }}</textarea>
         <button class="btn btn-success w-100 mt-3" type="submit">保存</button>
     </form>
     <div class="d-flex justify-content-between mt-4">
