@@ -128,10 +128,10 @@
             <div class="mb-3">
                 <label class="form-label">性别</label>
                 <select class="form-control" name="gender">
-                    <option %} %}selected{% endif if not profile.gender value="" {%>请选择</option>
-                    <option %} %}selected{% endif if profile.gender=='男' value="男" {%>男</option>
-                    <option %} %}selected{% endif if profile.gender=='女' value="女" {%>女</option>
-                    <option %} %}selected{% endif if profile.gender=='其他' value="其他" {%>其他</option>
+                    <option value="" {% if not profile.gender %}selected{% endif %}>请选择</option>
+                    <option value="男" {% if profile.gender=='男' %}selected{% endif %}>男</option>
+                    <option value="女" {% if profile.gender=='女' %}selected{% endif %}>女</option>
+                    <option value="其他" {% if profile.gender=='其他' %}selected{% endif %}>其他</option>
                 </select>
             </div>
             <div class="mb-3">
