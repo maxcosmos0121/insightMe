@@ -24,9 +24,21 @@ class DiaryDB:
             thoughts = TextField()
             plan = TextField()
 
+        class UserProfile(BaseModel):
+            name = CharField(null=True)
+            gender = CharField(null=True)
+            birthday = DateField(null=True)
+            monthly_income = CharField(null=True)
+            monthly_expense = CharField(null=True)
+            hobby = TextField(null=True)
+            job = CharField(null=True)
+            company = CharField(null=True)
+            skills = TextField(null=True)
+
         self.Diary = Diary
+        self.UserProfile = UserProfile
         self.db.connect(reuse_if_open=True)
-        self.db.create_tables([self.Diary])
+        self.db.create_tables([self.Diary, self.UserProfile])
 
     def today(self):
         return datetime.now().strftime('%Y-%m-%d')
@@ -69,3 +81,32 @@ class DiaryDB:
             }
             for rec in query
         ]
+
+    def get_profile(self) -> dict:
+        profile = self.UserProfile.select().first()
+        if profile:
+            return {
+                'name': profile.name,
+                'gender': profile.gender,
+                'birthday': profile.birthday.strftime('%Y-%m-%d') if profile.birthday else '',
+                'monthly_income': profile.monthly_income,
+                'monthly_expense': profile.monthly_expense,
+                'hobby': profile.hobby,
+                'job': profile.job,
+                'company': profile.company,
+                'skills': profile.skills
+            }
+        else:
+            return {
+                'name': '', 'gender': '', 'birthday': '', 'monthly_income': '', 'monthly_expense': '',
+                'hobby': '', 'job': '', 'company': '', 'skills': ''
+            }
+
+    def save_profile(self, data: dict):
+        profile = self.UserProfile.select().first()
+        if not profile:
+            profile = self.UserProfile.create(**data)
+        else:
+            for k, v in data.items():
+                setattr(profile, k, v)
+            profile.save()

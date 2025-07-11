@@ -50,6 +50,31 @@ def history():
     return render_template('history.html', records=records)
 
 
+@main_bp.route('/profile', methods=['GET', 'POST'])
+def profile():
+    if 'username' not in session:
+        return redirect(url_for('main.login'))
+    if request.method == 'POST':
+        data = {
+            'name': request.form.get('name', ''),
+            'gender': request.form.get('gender', ''),
+            'birthday': request.form.get('birthday', '') or None,
+            'monthly_income': request.form.get('monthly_income', ''),
+            'monthly_expense': request.form.get('monthly_expense', ''),
+            'hobby': request.form.get('hobby', ''),
+            'job': request.form.get('job', ''),
+            'company': request.form.get('company', ''),
+            'skills': request.form.get('skills', ''),
+        }
+        diary_db.save_profile(data)
+        message = '保存成功！'
+        profile = diary_db.get_profile()
+        return render_template('profile.html', profile=profile, message=message)
+    else:
+        profile = diary_db.get_profile()
+        return render_template('profile.html', profile=profile)
+
+
 @main_bp.route('/logout')
 def logout():
     session.pop('username', None)
