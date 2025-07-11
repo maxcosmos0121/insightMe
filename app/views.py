@@ -16,15 +16,30 @@ def before_request():
         diary_db = None
 
 
-@main_bp.route('/', methods=['GET', 'POST'])
+@main_bp.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         username = request.form.get('username')
         if not username:
             return render_template('login.html', error='用户名不能为空')
         session['username'] = username
-        return redirect(url_for('main.history'))  # 登录后跳转到历史记录
+        return redirect(url_for('main.home'))  # 登录后跳转到首页
     return render_template('login.html')
+
+
+@main_bp.route('/')
+def home():
+    if 'username' not in session:
+        return redirect(url_for('main.login'))
+    # 获取用户信息
+    user = {
+        'username': session['username'],
+        'nickname': diary_db.get_profile().get('name', '') if diary_db else '',
+        'diary_count': len(diary_db.get_all_records()) if diary_db else 0,
+        'streak': diary_db.get_streak() if diary_db else 0,
+        'today_mood': diary_db.get_today_mood() if diary_db else '未填写'
+    }
+    return render_template('home.html', user=user)
 
 
 @main_bp.route('/diary', methods=['GET', 'POST'])

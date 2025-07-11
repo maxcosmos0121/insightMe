@@ -1,0 +1,142 @@
+/* 公共样式 - InsightMe */
+
+/* 基础重置 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* 页面背景 */
+body {
+    background: linear-gradient(120deg, #f6fafd 0%, #e9f0fb 100%);
+
+}
+
+body::-webkit-scrollbar {
+    display: none;
+}
+
+/* 统一卡片样式 */
+.card-common {
+    max-width: 1200px;
+    margin: 48px auto;
+    padding: 2.5rem 2rem 2rem 2rem;
+    background: #fff;
+    border-radius: 1.5rem;
+    box-shadow: 0 4px 32px 0 rgba(0, 0, 0, 0.10);
+    border: none;
+}
+
+/* 页面标题样式 */
+.page-title {
+    font-weight: 800;
+    letter-spacing: 1px;
+    font-size: 1.35rem;
+    color: #222b45;
+    margin-bottom: 0;
+}
+
+/* 表单控件样式 */
+.form-control, textarea {
+    border-radius: 0.8rem !important;
+    border: 1.5px solid #e5e7eb;
+    background: #f8fafc;
+    transition: border-color 0.2s;
+    box-shadow: none;
+}
+
+.form-control:focus, textarea:focus {
+    border-color: #3b82f6;
+    background: #fff;
+}
+
+/* 表单标签样式 */
+.form-label {
+    color: #555;
+    font-weight: 500;
+}
+
+/* 按钮样式 */
+.btn-success {
+    border-radius: 0.6rem;
+    font-weight: 700;
+    font-size: 1.01rem;
+    padding: 0.5rem 0;
+}
+
+/* 链接样式 */
+.btn-link, .btn-link:visited {
+    color: #3b82f6;
+    font-weight: 600;
+    border-radius: 0.8rem;
+    transition: background 0.2s;
+}
+
+.btn-link:hover {
+    background: #f0f6ff;
+    color: #2563eb;
+    text-decoration: none;
+}
+
+/* 警告框样式 */
+.alert-danger {
+    border-radius: 0.8rem;
+    background: #fee2e2;
+    color: #b91c1c;
+    border: none;
+}
+
+.alert-success {
+    border-radius: 0.8rem;
+    background: #e0f7fa;
+    color: #059669;
+    border: none;
+}
+
+/* 滚动条样式 */
+textarea,
+input[type="text"],
+input[type="date"] {
+    scrollbar-width: thin;
+    scrollbar-color: #b4c5e4 #f1f3f9;
+    overflow-x: hidden;
+}
+
+textarea::-webkit-scrollbar,
+input[type="text"]::-webkit-scrollbar,
+input[type="date"]::-webkit-scrollbar {
+    width: 5px;
+    height: 0;
+    background: #f1f3f9;
+    border-radius: 6px;
+}
+
+textarea::-webkit-scrollbar-thumb,
+input[type="text"]::-webkit-scrollbar-thumb,
+input[type="date"]::-webkit-scrollbar-thumb {
+    background: #b4c5e4;
+    border-radius: 6px;
+}
+
+textarea::-webkit-scrollbar-thumb:hover,
+input[type="text"]::-webkit-scrollbar-thumb:hover,
+input[type="date"]::-webkit-scrollbar-thumb:hover {
+    background: #8fa7d3;
+}
+
+textarea::-webkit-scrollbar-button,
+input[type="text"]::-webkit-scrollbar-button,
+input[type="date"]::-webkit-scrollbar-button {
+    display: none;
+    height: 0;
+    width: 0;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .card-common {
+        margin: 16px auto;
+        padding: 1.5rem;
+    }
+} 

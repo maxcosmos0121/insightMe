@@ -1,5 +1,5 @@
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List, Dict
 
 from peewee import *
@@ -81,6 +81,31 @@ class DiaryDB:
             }
             for rec in query
         ]
+
+    def get_streak(self) -> int:
+        """计算连续签到天数"""
+        if not self.has_today_record():
+            return 0
+        
+        streak = 0
+        current_date = datetime.now().date()
+        
+        while True:
+            # 检查当前日期是否有记录
+            if self.Diary.select().where(self.Diary.date == current_date).exists():
+                streak += 1
+                current_date -= timedelta(days=1)
+            else:
+                break
+        
+        return streak
+
+    def get_today_mood(self) -> str:
+        """获取今日心情"""
+        if self.has_today_record():
+            record = self.Diary.select().where(self.Diary.date == self.today()).first()
+            return record.mood if record else '未填写'
+        return '未填写'
 
     def get_profile(self) -> dict:
         profile = self.UserProfile.select().first()

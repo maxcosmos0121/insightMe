@@ -5,11 +5,8 @@
     <title>日记记录 - InsightMe</title>
     <meta content="width=device-width, initial-scale=1" name="viewport">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/common.css') }}" rel="stylesheet">
     <style>
-        body {
-            background: linear-gradient(120deg, #f6fafd 0%, #e9f0fb 100%);
-            min-height: 100vh;
-        }
         .history-card {
             max-width: 1200px;
             margin: 48px auto;
@@ -19,7 +16,6 @@
             box-shadow: 0 4px 32px 0 rgba(0, 0, 0, 0.10);
             border: none;
         }
-
         .history-title {
             font-weight: 800;
             letter-spacing: 1px;
@@ -60,7 +56,6 @@
             white-space: pre-line;
             min-height: 1.7em;
         }
-
         .record-long {
             font-size: 0.99rem;
             color: #374151;
@@ -74,7 +69,6 @@
             white-space: pre-line;
             min-height: 1.7em;
         }
-
         .record-info-group {
             display: flex;
             flex-wrap: wrap;
@@ -82,7 +76,6 @@
             margin-top: 0.1rem;
             margin-bottom: 0.2rem;
         }
-
         .record-info-block {
             min-width: 90px;
             margin-bottom: 0;
@@ -98,36 +91,9 @@
             font-weight: 500;
             white-space: pre-line;
         }
-
-        .btn-primary {
-            /* 使用Bootstrap默认样式 */
-        }
-
-        .btn-outline-primary {
-            /* 使用Bootstrap默认样式 */
-        }
-
-        .btn-outline-danger {
-            /* 使用Bootstrap默认样式 */
-        }
-
-        .btn-link, .btn-link:visited {
-            color: #3b82f6;
-            font-weight: 600;
-            border-radius: 0.8rem;
-            transition: background 0.2s;
-        }
-
-        .btn-link:hover {
-            background: #f0f6ff;
-            color: #2563eb;
-            text-decoration: none;
-        }
-
         .text-secondary {
             color: #64748b !important;
         }
-
         .record-section-title {
             font-size: 1.01rem;
             font-weight: 700;
@@ -135,39 +101,7 @@
             margin: 0.2rem 0 0.1rem 0;
             letter-spacing: 0.2px;
         }
-        textarea,
-        input[type="text"],
-        input[type="date"] {
-            scrollbar-width: thin;
-            scrollbar-color: #b4c5e4 #f1f3f9;
-            overflow-x: hidden;
-        }
-        textarea::-webkit-scrollbar,
-        input[type="text"]::-webkit-scrollbar,
-        input[type="date"]::-webkit-scrollbar {
-            width: 5px;
-            height: 0;
-            background: #f1f3f9;
-            border-radius: 6px;
-        }
-        textarea::-webkit-scrollbar-thumb,
-        input[type="text"]::-webkit-scrollbar-thumb,
-        input[type="date"]::-webkit-scrollbar-thumb {
-            background: #b4c5e4;
-            border-radius: 6px;
-        }
-        textarea::-webkit-scrollbar-thumb:hover,
-        input[type="text"]::-webkit-scrollbar-thumb:hover,
-        input[type="date"]::-webkit-scrollbar-thumb:hover {
-            background: #8fa7d3;
-        }
-        textarea::-webkit-scrollbar-button,
-        input[type="text"]::-webkit-scrollbar-button,
-        input[type="date"]::-webkit-scrollbar-button {
-            display: none;
-            height: 0;
-            width: 0;
-        }
+
     </style>
 </head>
 <body>
@@ -176,8 +110,7 @@
         <div class="history-title">日记记录</div>
         <div>
             <a class="btn btn-primary me-2" href="{{ url_for('main.diary') }}">写今日日记</a>
-            <a class="btn btn-outline-primary me-2" href="{{ url_for('main.profile') }}">个人信息</a>
-            <a class="btn btn-outline-danger" href="{{ url_for('main.logout') }}">退出</a>
+            <a class="btn btn-outline-primary" href="{{ url_for('main.home') }}">返回首页</a>
         </div>
     </div>
     <hr>
