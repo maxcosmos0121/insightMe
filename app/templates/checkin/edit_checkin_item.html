@@ -112,14 +112,15 @@
     <hr>
     
     <div class="form-container">
-        <form method="post">
+        <form method="post" id="edit-checkin-form">
             <div class="form-section">
                 <div class="section-title">
                     📝 基本信息
                 </div>
             <div class="mb-3">
                 <label class="form-label">项目标题 *</label>
-                <input type="text" class="form-control" name="title" value="{{ item.title }}" required>
+                <input type="text" class="form-control" name="title" id="title" value="{{ item.title }}" required>
+                <div class="invalid-feedback" id="title-feedback"></div>
             </div>
             <div class="mb-3">
                 <label class="form-label">项目描述</label>
@@ -194,47 +195,121 @@
             </div>
         </div>
         
-            <button class="btn btn-success w-100" type="submit">保存修改</button>
+            <button class="btn btn-success w-100" type="submit" id="submit-btn">保存修改</button>
         </form>
     </div>
 </div>
 
+<!-- jQuery 3.7.1 -->
+<script src="{{ url_for('static', filename='js/jquery-3.7.1.min.js') }}"></script>
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
 <script>
-// 设置当前选中的图标和颜色
-document.addEventListener('DOMContentLoaded', function() {
-    const currentIcon = '{{ item.icon }}';
-    const currentColor = '{{ item.color }}';
+$(document).ready(function() {
+    // 设置当前选中的图标和颜色
+    var currentIcon = '{{ item.icon }}';
+    var currentColor = '{{ item.color }}';
     
     // 设置图标选中状态
-    document.querySelectorAll('.icon-option').forEach(option => {
-        if (option.dataset.icon === currentIcon) {
-            option.classList.add('selected');
+    $('.icon-option').each(function() {
+        if ($(this).data('icon') === currentIcon) {
+            $(this).addClass('selected');
         }
     });
     
     // 设置颜色选中状态
-    document.querySelectorAll('.color-option').forEach(option => {
-        if (option.dataset.color === currentColor) {
-            option.classList.add('selected');
+    $('.color-option').each(function() {
+        if ($(this).data('color') === currentColor) {
+            $(this).addClass('selected');
         }
     });
-});
 
-// 图标选择
-document.querySelectorAll('.icon-option').forEach(option => {
-    option.addEventListener('click', function() {
-        document.querySelectorAll('.icon-option').forEach(opt => opt.classList.remove('selected'));
-        this.classList.add('selected');
-        document.getElementById('icon-input').value = this.dataset.icon;
+    // 图标选择
+    $('.icon-option').on('click', function() {
+        $('.icon-option').removeClass('selected');
+        $(this).addClass('selected');
+        $('#icon-input').val($(this).data('icon'));
+        
+        // 添加点击动画效果
+        $(this).addClass('clicked');
+        setTimeout(function() {
+            $('.icon-option').removeClass('clicked');
+        }, 200);
     });
-});
 
-// 颜色选择
-document.querySelectorAll('.color-option').forEach(option => {
-    option.addEventListener('click', function() {
-        document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('selected'));
-        this.classList.add('selected');
-        document.getElementById('color-input').value = this.dataset.color;
+    // 颜色选择
+    $('.color-option').on('click', function() {
+        $('.color-option').removeClass('selected');
+        $(this).addClass('selected');
+        $('#color-input').val($(this).data('color'));
+        
+        // 添加点击动画效果
+        $(this).addClass('clicked');
+        setTimeout(function() {
+            $('.color-option').removeClass('clicked');
+        }, 200);
+    });
+    
+    // 表单验证
+    $('#edit-checkin-form').on('submit', function(e) {
+        var isValid = true;
+        var title = $('#title').val().trim();
+        
+        // 清除之前的验证状态
+        $('.form-control').removeClass('is-invalid is-valid');
+        $('.invalid-feedback').hide();
+        
+        // 验证标题
+        if (!title) {
+            $('#title').addClass('is-invalid');
+            $('#title-feedback').text('请填写项目标题').show();
+            isValid = false;
+        } else if (title.length < 2) {
+            $('#title').addClass('is-invalid');
+            $('#title-feedback').text('标题至少需要2个字符').show();
+            isValid = false;
+        } else {
+            $('#title').addClass('is-valid');
+        }
+        
+        if (!isValid) {
+            e.preventDefault();
+            return false;
+        }
+        
+        // 显示加载状态
+        $('#submit-btn').prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>保存中...');
+    });
+    
+    // 输入框焦点效果
+    $('.form-control, .form-select').on('focus', function() {
+        $(this).parent().addClass('focused');
+    }).on('blur', function() {
+        $(this).parent().removeClass('focused');
+    });
+    
+    // 实时标题验证
+    $('#title').on('input', function() {
+        var title = $(this).val().trim();
+        if (title.length >= 2) {
+            $(this).removeClass('is-invalid').addClass('is-valid');
+            $('#title-feedback').hide();
+        } else {
+            $(this).removeClass('is-valid');
+        }
+    });
+    
+    // 回车键提交表单
+    $('.form-control').on('keypress', function(e) {
+        if (e.which === 13) {
+            $('#edit-checkin-form').submit();
+        }
+    });
+    
+    // 页面加载动画
+    $('.form-section').hide().each(function(index) {
+        $(this).delay(index * 200).fadeIn(400);
     });
 });
 </script>

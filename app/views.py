@@ -1,7 +1,7 @@
-from flask import Blueprint, render_template, request, redirect, url_for, session, jsonify
+from flask import Blueprint, render_template, request, redirect, url_for, session
 
-from app.models import DiaryDB
 from app.auth import UserAuth
+from app.models import DiaryDB
 
 diary_db = None
 user_auth = UserAuth()
@@ -24,19 +24,19 @@ def register():
         username = request.form.get('username', '').strip()
         password = request.form.get('password', '').strip()
         confirm_password = request.form.get('confirm_password', '').strip()
-        
+
         if not username or not password or not confirm_password:
             return render_template('auth/register.html', error='所有字段都必须填写')
-        
+
         if password != confirm_password:
             return render_template('auth/register.html', error='两次输入的密码不一致')
-        
+
         success, message = user_auth.register_user(username, password)
         if success:
             return redirect(url_for('main.login', registered='true'))
         else:
             return render_template('auth/register.html', error=message)
-    
+
     return render_template('auth/register.html')
 
 
@@ -45,23 +45,23 @@ def login():
     if request.method == 'POST':
         username = request.form.get('username', '').strip()
         password = request.form.get('password', '').strip()
-        
+
         if not username or not password:
             return render_template('auth/login.html', error='用户名和密码不能为空')
-        
+
         success, message = user_auth.verify_user(username, password)
         if success:
             session['username'] = username
             return redirect(url_for('main.home'))
         else:
             return render_template('auth/login.html', error=message)
-    
+
     # 检查是否是从注册页面跳转过来的
     registered = request.args.get('registered')
     success_message = None
     if registered == 'true':
         success_message = '注册成功！请使用您的用户名和密码登录。'
-    
+
     return render_template('auth/login.html', success=success_message)
 
 
@@ -140,17 +140,17 @@ def logout():
 def todos():
     if 'username' not in session:
         return redirect(url_for('main.login'))
-    
+
     # 获取筛选参数
     status_filter = request.args.get('status', '')
-    
+
     # 获取所有任务并根据状态筛选
     all_todos = diary_db.get_all_todos()
     if status_filter:
         todos = [todo for todo in all_todos if todo['status'] == status_filter]
     else:
         todos = all_todos
-    
+
     stats = diary_db.get_todo_stats()
     return render_template('todo/todos.html', todos=todos, stats=stats, current_filter=status_filter)
 
@@ -159,14 +159,14 @@ def todos():
 def add_todo():
     if 'username' not in session:
         return redirect(url_for('main.login'))
-    
+
     if request.method == 'POST':
         from datetime import datetime
-        
+
         # 处理时间字段
         planned_start = request.form.get('planned_start')
         planned_end = request.form.get('planned_end')
-        
+
         data = {
             'content': request.form.get('content', ''),
             'quadrant': request.form.get('quadrant', ''),
@@ -174,10 +174,10 @@ def add_todo():
             'planned_end': datetime.strptime(planned_end, '%Y-%m-%dT%H:%M') if planned_end else None,
             'status': '未开始'
         }
-        
+
         diary_db.add_todo(data)
         return redirect(url_for('main.todos'))
-    
+
     return render_template('todo/add_todo.html')
 
 
@@ -185,14 +185,14 @@ def add_todo():
 def edit_todo(todo_id):
     if 'username' not in session:
         return redirect(url_for('main.login'))
-    
+
     if request.method == 'POST':
         from datetime import datetime
-        
+
         # 处理时间字段
         planned_start = request.form.get('planned_start')
         planned_end = request.form.get('planned_end')
-        
+
         data = {
             'content': request.form.get('content', ''),
             'quadrant': request.form.get('quadrant', ''),
@@ -200,14 +200,14 @@ def edit_todo(todo_id):
             'planned_end': datetime.strptime(planned_end, '%Y-%m-%dT%H:%M') if planned_end else None,
             'status': request.form.get('status', '')
         }
-        
+
         diary_db.update_todo(todo_id, data)
         return redirect(url_for('main.todos'))
-    
+
     todo = diary_db.get_todo_by_id(todo_id)
     if not todo:
         return redirect(url_for('main.todos'))
-    
+
     return render_template('todo/edit_todo.html', todo=todo)
 
 
@@ -215,7 +215,7 @@ def edit_todo(todo_id):
 def delete_todo(todo_id):
     if 'username' not in session:
         return redirect(url_for('main.login'))
-    
+
     diary_db.delete_todo(todo_id)
     return redirect(url_for('main.todos'))
 
@@ -224,7 +224,7 @@ def delete_todo(todo_id):
 def update_todo_status(todo_id, status):
     if 'username' not in session:
         return redirect(url_for('main.login'))
-    
+
     data = {'status': status}
     if status == '进行中':
         from datetime import datetime
@@ -232,7 +232,7 @@ def update_todo_status(todo_id, status):
     elif status == '已完成':
         from datetime import datetime
         data['actual_end'] = datetime.now()
-    
+
     diary_db.update_todo(todo_id, data)
     return redirect(url_for('main.todos'))
 
@@ -241,7 +241,7 @@ def update_todo_status(todo_id, status):
 def complete_todo(todo_id):
     if 'username' not in session:
         return redirect(url_for('main.login'))
-    
+
     if request.method == 'POST':
         completion_note = request.form.get('completion_note', '')
         data = {
@@ -250,14 +250,14 @@ def complete_todo(todo_id):
         }
         from datetime import datetime
         data['actual_end'] = datetime.now()
-        
+
         diary_db.update_todo(todo_id, data)
         return redirect(url_for('main.todos'))
-    
+
     todo = diary_db.get_todo_by_id(todo_id)
     if not todo:
         return redirect(url_for('main.todos'))
-    
+
     return render_template('todo/complete_todo.html', todo=todo)
 
 
@@ -265,21 +265,21 @@ def complete_todo(todo_id):
 def cancel_todo(todo_id):
     if 'username' not in session:
         return redirect(url_for('main.login'))
-    
+
     if request.method == 'POST':
         cancel_reason = request.form.get('cancel_reason', '')
         data = {
             'status': '取消',
             'cancel_reason': cancel_reason
         }
-        
+
         diary_db.update_todo(todo_id, data)
         return redirect(url_for('main.todos'))
-    
+
     todo = diary_db.get_todo_by_id(todo_id)
     if not todo:
         return redirect(url_for('main.todos'))
-    
+
     return render_template('todo/cancel_todo.html', todo=todo)
 
 # 打卡相关路由
@@ -287,7 +287,7 @@ def cancel_todo(todo_id):
 def checkin():
     if 'username' not in session:
         return redirect(url_for('main.login'))
-    
+
     items = diary_db.get_all_checkin_items()
     stats = diary_db.get_checkin_stats()
     return render_template('checkin/checkin.html', items=items, stats=stats)
@@ -297,11 +297,11 @@ def checkin():
 def create_checkin_item():
     if 'username' not in session:
         return redirect(url_for('main.login'))
-    
+
     if request.method == 'POST':
         target_days_str = request.form.get('target_days', '0')
         target_days = int(target_days_str) if target_days_str.strip() else 0
-        
+
         data = {
             'title': request.form.get('title', ''),
             'description': request.form.get('description', ''),
@@ -311,10 +311,10 @@ def create_checkin_item():
             'color': request.form.get('color', '#3b82f6'),
             'is_active': True
         }
-        
+
         diary_db.add_checkin_item(data)
         return redirect(url_for('main.checkin'))
-    
+
     return render_template('checkin/create_checkin_item.html')
 
 
@@ -322,15 +322,15 @@ def create_checkin_item():
 def edit_checkin_item(item_id):
     if 'username' not in session:
         return redirect(url_for('main.login'))
-    
+
     item = diary_db.get_checkin_item_by_id(item_id)
     if not item:
         return redirect(url_for('main.checkin'))
-    
+
     if request.method == 'POST':
         target_days_str = request.form.get('target_days', '0')
         target_days = int(target_days_str) if target_days_str.strip() else 0
-        
+
         data = {
             'title': request.form.get('title', ''),
             'description': request.form.get('description', ''),
@@ -340,10 +340,10 @@ def edit_checkin_item(item_id):
             'color': request.form.get('color', '#3b82f6'),
             'is_active': request.form.get('is_active') == 'on'
         }
-        
+
         diary_db.update_checkin_item(item_id, data)
         return redirect(url_for('main.checkin'))
-    
+
     return render_template('checkin/edit_checkin_item.html', item=item)
 
 
@@ -351,7 +351,7 @@ def edit_checkin_item(item_id):
 def delete_checkin_item(item_id):
     if 'username' not in session:
         return redirect(url_for('main.login'))
-    
+
     diary_db.delete_checkin_item(item_id)
     return redirect(url_for('main.checkin'))
 
@@ -360,22 +360,22 @@ def delete_checkin_item(item_id):
 def do_checkin(item_id):
     if 'username' not in session:
         return redirect(url_for('main.login'))
-    
+
     if request.method == 'POST':
         note = request.form.get('note', '')
         mood = request.form.get('mood', '')
-        
+
         success, message = diary_db.add_checkin_record(item_id, note, mood)
         if success:
             return redirect(url_for('main.checkin'))
         else:
             item = diary_db.get_checkin_item_by_id(item_id)
             return render_template('checkin/do_checkin.html', item=item, error=message)
-    
+
     item = diary_db.get_checkin_item_by_id(item_id)
     if not item:
         return redirect(url_for('main.checkin'))
-    
+
     return render_template('checkin/do_checkin.html', item=item)
 
 
@@ -383,30 +383,30 @@ def do_checkin(item_id):
 def checkin_history():
     if 'username' not in session:
         return redirect(url_for('main.login'))
-    
+
     item_id = request.args.get('item_id', type=int)
     days = request.args.get('days', 30, type=int)
-    
+
     items = diary_db.get_all_checkin_items()
     records = diary_db.get_checkin_records(item_id, days)
-    
+
     # 计算统计数据
     from datetime import datetime, timedelta
     today = datetime.now().date()
     week_start = today - timedelta(days=today.weekday())
     month_start = today.replace(day=1)
-    
+
     # 获取统计数据
     total_records = len(diary_db.get_checkin_records(None, 365)) if diary_db else 0  # 一年内的总记录
     today_records = len(diary_db.get_checkin_records(None, 1)) if diary_db else 0  # 今日记录
     week_records = len(diary_db.get_checkin_records(None, 7)) if diary_db else 0  # 本周记录
     month_records = len(diary_db.get_checkin_records(None, 30)) if diary_db else 0  # 本月记录
-    
+
     stats = {
         'total_records': total_records,
         'today_records': today_records,
         'week_records': week_records,
         'month_records': month_records
     }
-    
+
     return render_template('checkin/checkin_history.html', items=items, records=records, selected_item_id=item_id, days=days, stats=stats)

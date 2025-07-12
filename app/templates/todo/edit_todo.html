@@ -134,7 +134,7 @@
     <hr>
 
     <div class="form-container">
-        <form method="POST">
+        <form method="POST" id="edit-todo-form">
             {% if todo.status == '未开始' %}
             <!-- 未开始状态：可以编辑所有基本信息 -->
             <div class="form-section">
@@ -143,6 +143,7 @@
                 </div>
                 <div class="mb-3">
                     <textarea class="form-control" id="content" name="content" rows="3" placeholder="请描述您要完成的任务..." required>{{ todo.content }}</textarea>
+                    <div id="content-feedback" class="invalid-feedback"></div>
                 </div>
             </div>
 
@@ -169,6 +170,7 @@
                     </div>
                 </div>
                 <input type="hidden" id="quadrant" name="quadrant" value="{{ todo.quadrant }}" required>
+                <div id="quadrant-feedback" class="invalid-feedback"></div>
             </div>
             {% else %}
             <!-- 非未开始状态：只显示基本信息，不可编辑 -->
@@ -205,6 +207,7 @@
                         <label for="planned_end" class="form-label">计划结束时间</label>
                         <input type="datetime-local" class="form-control" id="planned_end" name="planned_end"
                                value="{{ todo.planned_end.replace(' ', 'T') if todo.planned_end else '' }}">
+                        <div class="invalid-feedback"></div>
                     </div>
                 </div>
                 {% else %}
@@ -242,52 +245,115 @@
                 {% endif %}
             </div>
 
-            <button class="btn btn-success w-100" type="submit">保存</button>
+            <button class="btn btn-success w-100" type="submit" id="submit-btn">保存</button>
         </form>
     </div>
 </div>
 
-<script>
-// 象限选择功能
-document.querySelectorAll('.quadrant-option').forEach(option => {
-    option.addEventListener('click', function() {
-        // 移除其他选中状态
-        document.querySelectorAll('.quadrant-option').forEach(opt => {
-            opt.classList.remove('selected');
-        });
-        // 添加当前选中状态
-        this.classList.add('selected');
-        // 设置隐藏输入框的值
-        document.getElementById('quadrant').value = this.dataset.value;
-    });
-});
+<!-- jQuery 3.7.1 -->
+<script src="{{ url_for('static', filename='js/jquery-3.7.1.min.js') }}"></script>
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-// 根据当前选中的象限设置选中状态
-document.addEventListener('DOMContentLoaded', function() {
-    const currentQuadrant = document.getElementById('quadrant').value;
-    document.querySelectorAll('.quadrant-option').forEach(option => {
-        if (option.dataset.value === currentQuadrant) {
-            option.classList.add('selected');
+<script>
+$(document).ready(function() {
+    // 象限选择功能
+    $('.quadrant-option').on('click', function() {
+        // 移除其他选中状态
+        $('.quadrant-option').removeClass('selected');
+        // 添加当前选中状态
+        $(this).addClass('selected');
+        // 设置隐藏输入框的值
+        $('#quadrant').val($(this).data('value'));
+        
+        // 清除验证状态
+        $('#quadrant').removeClass('is-invalid');
+        $('#quadrant-feedback').hide();
+    });
+
+    // 根据当前选中的象限设置选中状态
+    var currentQuadrant = $('#quadrant').val();
+    $('.quadrant-option').each(function() {
+        if ($(this).data('value') === currentQuadrant) {
+            $(this).addClass('selected');
         }
     });
-});
 
-// 表单验证
-document.querySelector('form').addEventListener('submit', function(e) {
-    const content = document.getElementById('content').value.trim();
-    const quadrant = document.getElementById('quadrant').value;
-
-    if (!content) {
-        e.preventDefault();
-        alert('请填写任务内容');
-        return;
-    }
-
-    if (!quadrant) {
-        e.preventDefault();
-        alert('请选择任务象限分类');
-        return;
-    }
+    // 表单验证
+    $('#edit-todo-form').on('submit', function(e) {
+        var isValid = true;
+        var content = $('#content').val().trim();
+        var quadrant = $('#quadrant').val();
+        
+        // 清除之前的验证状态
+        $('.form-control').removeClass('is-invalid is-valid');
+        $('.invalid-feedback').hide();
+        
+        // 验证任务内容
+        if (!content) {
+            $('#content').addClass('is-invalid');
+            $('#content-feedback').text('请填写任务内容').show();
+            isValid = false;
+        } else {
+            $('#content').addClass('is-valid');
+        }
+        
+        // 验证象限选择
+        if (!quadrant) {
+            $('#quadrant').addClass('is-invalid');
+            $('#quadrant-feedback').text('请选择任务象限分类').show();
+            isValid = false;
+        } else {
+            $('#quadrant').addClass('is-valid');
+        }
+        
+        if (!isValid) {
+            e.preventDefault();
+            return false;
+        }
+        
+        // 显示加载状态
+        $('#submit-btn').prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>保存中...');
+    });
+    
+    // 时间验证
+    $('#planned_end').on('change', function() {
+        var startTime = $('#planned_start').val();
+        var endTime = $(this).val();
+        
+        if (startTime && endTime && startTime >= endTime) {
+            $(this).addClass('is-invalid');
+            $(this).next('.invalid-feedback').text('结束时间必须晚于开始时间').show();
+        } else {
+            $(this).removeClass('is-invalid');
+            $(this).next('.invalid-feedback').hide();
+        }
+    });
+    
+    // 输入框焦点效果
+    $('.form-control').on('focus', function() {
+        $(this).parent().addClass('focused');
+    }).on('blur', function() {
+        $(this).parent().removeClass('focused');
+    });
+    
+    // 实时内容验证
+    $('#content').on('input', function() {
+        var content = $(this).val().trim();
+        if (content.length > 0) {
+            $(this).removeClass('is-invalid').addClass('is-valid');
+            $('#content-feedback').hide();
+        } else {
+            $(this).removeClass('is-valid');
+        }
+    });
+    
+    // 回车键提交表单
+    $('.form-control').on('keypress', function(e) {
+        if (e.which === 13) {
+            $('#edit-todo-form').submit();
+        }
+    });
 });
 </script>
 </body>
