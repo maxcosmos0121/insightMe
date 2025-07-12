@@ -198,7 +198,7 @@
                 <div class="time-inputs">
                     <div class="mb-3">
                         <label for="planned_start" class="form-label">计划开始时间</label>
-                        <input type="datetime-local" class="form-control" id="planned_start" name="planned_start" 
+                        <input type="datetime-local" class="form-control" id="planned_start" name="planned_start"
                                value="{{ todo.planned_start.replace(' ', 'T') if todo.planned_start else '' }}">
                     </div>
                     <div class="mb-3">
@@ -242,21 +242,6 @@
                 {% endif %}
             </div>
 
-            <div class="form-section">
-                <div class="section-title">
-                    任务状态
-                </div>
-                <div class="status-section">
-                    <div class="status-info">
-                        <span>当前状态：</span>
-                        <span class="status-badge status-{{ todo.status.replace(' ', '-').lower() }}">{{ todo.status }}</span>
-                    </div>
-                    <input type="hidden" id="status" name="status" value="{{ todo.status }}">
-                </div>
-            </div>
-
-
-
             <button class="btn btn-success w-100" type="submit">保存</button>
         </form>
     </div>
@@ -291,13 +276,13 @@ document.addEventListener('DOMContentLoaded', function() {
 document.querySelector('form').addEventListener('submit', function(e) {
     const content = document.getElementById('content').value.trim();
     const quadrant = document.getElementById('quadrant').value;
-    
+
     if (!content) {
         e.preventDefault();
         alert('请填写任务内容');
         return;
     }
-    
+
     if (!quadrant) {
         e.preventDefault();
         alert('请选择任务象限分类');
@@ -306,4 +291,4 @@ document.querySelector('form').addEventListener('submit', function(e) {
 });
 </script>
 </body>
-</html> 
+</html>
