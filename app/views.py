@@ -33,7 +33,7 @@ def register():
         
         success, message = user_auth.register_user(username, password)
         if success:
-            return render_template('register.html', success=message)
+            return redirect(url_for('main.login', registered='true'))
         else:
             return render_template('register.html', error=message)
     
@@ -56,7 +56,13 @@ def login():
         else:
             return render_template('login.html', error=message)
     
-    return render_template('login.html')
+    # 检查是否是从注册页面跳转过来的
+    registered = request.args.get('registered')
+    success_message = None
+    if registered == 'true':
+        success_message = '注册成功！请使用您的用户名和密码登录。'
+    
+    return render_template('login.html', success=success_message)
 
 
 @main_bp.route('/')

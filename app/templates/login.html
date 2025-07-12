@@ -55,6 +55,13 @@
             border: none;
         }
 
+        .alert-success {
+            border-radius: 0.8rem;
+            background: #dcfce7;
+            color: #166534;
+            border: none;
+        }
+
         .login-link {
             text-align: center;
             margin-top: 1.5rem;
@@ -77,6 +84,10 @@
     <div class="login-title text-center">InsightMe 登录</div>
     {% if error %}
     <div class="alert alert-danger py-2">{{ error }}</div>
+    {% endif %}
+    
+    {% if success %}
+    <div class="alert alert-success py-2">{{ success }}</div>
     {% endif %}
     <form method="post">
         <div class="mb-3">
