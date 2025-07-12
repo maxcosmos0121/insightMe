@@ -1,253 +1,307 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <title>首页 - InsightMe</title>
-    <meta content="width=device-width, initial-scale=1" name="viewport">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="{{ url_for('static', filename='css/common.css') }}" rel="stylesheet">
+    <meta content="width=device-width, initial-scale=1" name="viewport" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="{{ url_for('static', filename='css/common.css') }}"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://uicdn.toast.com/calendar/latest/toastui-calendar.min.css"
+    />
+    <script src="https://uicdn.toast.com/calendar/latest/toastui-calendar.min.js"></script>
     <style>
+      .main-layout {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2.5rem;
+        align-items: stretch;
+      }
+      .left-section {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+      }
+      .right-section {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+      }
+      .welcome-box {
+        background: linear-gradient(135deg, #f0f6ff 0%, #e9f0fb 100%);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        border: 1px solid #e5e7eb;
+        height: 180px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+      .welcome-title {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 0.5rem;
+      }
+      .welcome-subtitle {
+        font-size: 1rem;
+        color: #64748b;
+        font-weight: 500;
+      }
+      .stats-box {
+        background: #f9fafb;
+        border-radius: 1rem;
+        padding: 1.2rem;
+        border: 1px solid #e5e7eb;
+        /* height: 200px; */
+        display: flex;
+        flex-direction: column;
+      }
+      .stats-title {
+        font-size: 1.08rem;
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 0.8rem;
+      }
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.9rem;
+      }
+      .stat-item {
+        text-align: center;
+        padding: 0.95rem;
+        background: white;
+        border-radius: 0.8rem;
+        border: 1px solid #f1f5f9;
+      }
+      .stat-number {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: #2563eb;
+        margin-bottom: 0.22rem;
+      }
+      .stat-label {
+        font-size: 0.95rem;
+        color: #64748b;
+        font-weight: 500;
+      }
+      .actions-box {
+        background: #f9fafb;
+        border-radius: 1rem;
+        padding: 1.2rem;
+        border: 1px solid #e5e7eb;
+        /* height: 200px; */
+        display: flex;
+        flex-direction: column;
+      }
+      .actions-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 1rem;
+      }
+      .actions-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.8rem;
+      }
+      .action-link {
+        display: flex;
+        align-items: center;
+        padding: 1rem;
+        background: white;
+        border-radius: 0.8rem;
+        text-decoration: none;
+        color: #1e293b;
+        border: 1px solid #f1f5f9;
+        font-weight: 500;
+      }
+      .action-link:hover {
+        background: #f8fafc;
+        color: #2563eb;
+        text-decoration: none;
+      }
+      .action-icon {
+        font-size: 1.3rem;
+        margin-right: 0.8rem;
+      }
+      .notice-box {
+        background: #fef3c7;
+        border-left: 3px solid #f59e0b;
+        padding: 1.2rem;
+        border-radius: 0.8rem;
+        color: #92400e;
+        font-size: 0.95rem;
+        line-height: 1.5;
+      }
+      .logout-small {
+        margin-top: 1rem;
+        text-align: left;
+      }
+      .mood-box {
+        background: #f0fdf4;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        border: 1px solid #dcfce7;
+        height: 180px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+      .mood-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 1rem;
+      }
+      .mood-content {
+        font-size: 2rem;
+        color: #059669;
+        font-weight: 700;
+        text-align: center;
+        padding: 1rem;
+        background: white;
+        border-radius: 0.8rem;
+        border: 1px solid #d1fae5;
+        flex-grow: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .calendar-box {
+        grid-column: 1 / -1; /* 横跨整个 main-layout */
+        margin-top: 1.5rem;
+        padding: 1.5rem;
+        background-color: #fdfdfd;
+        border-radius: 1rem;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      }
+
+      .calendar-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+      }
+
+      @media (max-width: 768px) {
         .main-layout {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 2.5rem;
-            align-items: stretch;
-        }
-        .left-section {
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-        }
-        .right-section {
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-        }
-        .welcome-box {
-            background: linear-gradient(135deg, #f0f6ff 0%, #e9f0fb 100%);
-            border-radius: 1rem;
-            padding: 1.5rem;
-            border: 1px solid #e5e7eb;
-            height: 180px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-        .welcome-title {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: #1e293b;
-            margin-bottom: 0.5rem;
-        }
-        .welcome-subtitle {
-            font-size: 1rem;
-            color: #64748b;
-            font-weight: 500;
-        }
-        .stats-box {
-            background: #f9fafb;
-            border-radius: 1rem;
-            padding: 1.2rem;
-            border: 1px solid #e5e7eb;
-            /* height: 200px; */
-            display: flex;
-            flex-direction: column;
-        }
-        .stats-title {
-            font-size: 1.08rem;
-            font-weight: 600;
-            color: #1e293b;
-            margin-bottom: 0.8rem;
+          grid-template-columns: 1fr;
+          gap: 1.5rem;
         }
         .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 0.9rem;
+          grid-template-columns: repeat(2, 1fr);
         }
-        .stat-item {
-            text-align: center;
-            padding: 0.95rem;
-            background: white;
-            border-radius: 0.8rem;
-            border: 1px solid #f1f5f9;
-        }
-        .stat-number {
-            font-size: 1.4rem;
-            font-weight: 700;
-            color: #2563eb;
-            margin-bottom: 0.22rem;
-        }
-        .stat-label {
-            font-size: 0.95rem;
-            color: #64748b;
-            font-weight: 500;
-        }
-        .actions-box {
-            background: #f9fafb;
-            border-radius: 1rem;
-            padding: 1.2rem;
-            border: 1px solid #e5e7eb;
-            /* height: 200px; */
-            display: flex;
-            flex-direction: column;
-        }
-        .actions-title {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: #1e293b;
-            margin-bottom: 1rem;
-        }
-        .actions-list {
-            display: flex;
-            flex-direction: column;
-            gap: 0.8rem;
-        }
-        .action-link {
-            display: flex;
-            align-items: center;
-            padding: 1rem;
-            background: white;
-            border-radius: 0.8rem;
-            text-decoration: none;
-            color: #1e293b;
-            border: 1px solid #f1f5f9;
-            font-weight: 500;
-        }
-        .action-link:hover {
-            background: #f8fafc;
-            color: #2563eb;
-            text-decoration: none;
-        }
-        .action-icon {
-            font-size: 1.3rem;
-            margin-right: 0.8rem;
-        }
-        .notice-box {
-            background: #fef3c7;
-            border-left: 3px solid #f59e0b;
-            padding: 1.2rem;
-            border-radius: 0.8rem;
-            color: #92400e;
-            font-size: 0.95rem;
-            line-height: 1.5;
-        }
-        .logout-small {
-            margin-top: 1rem;
-            text-align: left;
-        }
-        .mood-box {
-            background: #f0fdf4;
-            border-radius: 1rem;
-            padding: 1.5rem;
-            border: 1px solid #dcfce7;
-            height: 180px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-        .mood-title {
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: #1e293b;
-            margin-bottom: 1rem;
-        }
-        .mood-content {
-            font-size: 2rem;
-            color: #059669;
-            font-weight: 700;
-            text-align: center;
-            padding: 1rem;
-            background: white;
-            border-radius: 0.8rem;
-            border: 1px solid #d1fae5;
-            flex-grow: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        @media (max-width: 768px) {
-            .main-layout {
-                grid-template-columns: 1fr;
-                gap: 1.5rem;
-            }
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
+      }
     </style>
-</head>
-<body>
-<div class="card-common">
-    <div class="main-layout">
+  </head>
+  <body>
+    <div class="card-common">
+      <div class="main-layout">
         <div class="left-section">
-            <div class="welcome-box">
-                <h1 class="welcome-title">欢迎回来，{{ user.nickname or user.username }}</h1>
-                <p class="welcome-subtitle">开启新一天的心情记录之旅</p>
-                <div class="logout-small">
-                    <a class="btn btn-outline-danger btn-sm" href="{{ url_for('main.logout') }}">退出登录</a>
+          <div class="welcome-box">
+            <h1 class="welcome-title">
+              欢迎回来，{{ user.nickname or user.username }}
+            </h1>
+            <p class="welcome-subtitle">开启新一天的心情记录之旅</p>
+            <div class="logout-small">
+              <a
+                class="btn btn-outline-danger btn-sm"
+                href="{{ url_for('main.logout') }}"
+                >退出登录</a
+              >
+            </div>
+          </div>
+
+          <div class="stats-box">
+            <h2 class="stats-title">📊 数据概览</h2>
+            <div class="stats-grid">
+              <div class="stat-item">
+                <div class="stat-number">{{ user.diary_count or 0 }}</div>
+                <div class="stat-label">已写日记</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-number">{{ user.streak or 0 }}</div>
+                <div class="stat-label">连续签到</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-number">{{ user.todo_stats.total or 0 }}</div>
+                <div class="stat-label">待做任务</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-number">
+                  {{ user.todo_stats.completed or 0 }}
                 </div>
+                <div class="stat-label">已完成</div>
+              </div>
             </div>
-            
-            <div class="stats-box">
-                <h2 class="stats-title">📊 数据概览</h2>
-                <div class="stats-grid">
-                    <div class="stat-item">
-                        <div class="stat-number">{{ user.diary_count or 0 }}</div>
-                        <div class="stat-label">已写日记</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-number">{{ user.streak or 0 }}</div>
-                        <div class="stat-label">连续签到</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-number">{{ user.todo_stats.total or 0 }}</div>
-                        <div class="stat-label">待做任务</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-number">{{ user.todo_stats.completed or 0 }}</div>
-                        <div class="stat-label">已完成</div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="notice-box">
-                💡 小贴士：<br>坚持记录，发现更好的自己。每一天的感悟都是成长的见证。
-            </div>
+          </div>
+
+          <div class="notice-box">
+            💡 小贴士：<br />坚持记录，发现更好的自己。每一天的感悟都是成长的见证。
+          </div>
         </div>
-        
+
         <div class="right-section">
-            <div class="mood-box">
-                <h2 class="mood-title">😊 今日心情</h2>
-                <div class="mood-content">{{ user.today_mood or '未填写' }}</div>
-            </div>
-            
-            <div class="actions-box">
-                <h2 class="actions-title">🚀 快速操作</h2>
-                <div class="actions-list">
-                    <a class="action-link" href="{{ url_for('main.diary') }}">
-                        <span class="action-icon">✍️</span>
-                        写日记
-                    </a>
-                    <a class="action-link" href="{{ url_for('main.todos') }}">
-                        <span class="action-icon">📋</span>
-                        待做清单
-                    </a>
-                    <a class="action-link" href="{{ url_for('main.history') }}">
-                        <span class="action-icon">📚</span>
-                        日记记录
-                    </a>
-                    <a class="action-link" href="{{ url_for('main.profile') }}">
-                        <span class="action-icon">👤</span>
-                        个人资料
-                    </a>
-                </div>
-            </div>
-            
+          <div class="mood-box">
+            <h2 class="mood-title">😊 今日心情</h2>
+            <div class="mood-content">{{ user.today_mood or '未填写' }}</div>
+          </div>
 
+          <div class="actions-box">
+            <h2 class="actions-title">🚀 快速操作</h2>
+            <div class="actions-list">
+              <a class="action-link" href="{{ url_for('main.diary') }}">
+                <span class="action-icon">✍️</span>
+                写日记
+              </a>
+              <a class="action-link" href="{{ url_for('main.todos') }}">
+                <span class="action-icon">📋</span>
+                待做清单
+              </a>
+              <a class="action-link" href="{{ url_for('main.history') }}">
+                <span class="action-icon">📚</span>
+                日记记录
+              </a>
+              <a class="action-link" href="{{ url_for('main.profile') }}">
+                <span class="action-icon">👤</span>
+                个人资料
+              </a>
+            </div>
+          </div>
         </div>
-        
-
+        <!-- 📅 心情日历组件 -->
+        <div class="calendar-box">
+          <h2 class="calendar-title">📅 心情日历</h2>
+          <div id="calendar" style="height: 500px; width: 100%"></div>
+        </div>
+      </div>
     </div>
-</div>
-</body>
-</html> 
+
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        const calendar = new tui.Calendar('#calendar', {
+          defaultView: 'month',
+          isReadOnly: true,
+          calendars: [
+            {
+              id: '1',
+              name: '日记',
+              backgroundColor: '#00a9ff',
+            }
+          ]
+        });
+
+        const events = {{ events | tojson | safe }};
+        calendar.createEvents(events);
+      });
+    </script>
+  </body>
+</html>

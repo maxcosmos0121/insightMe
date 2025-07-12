@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, sessio
 
 from app.models import DiaryDB
 from app.auth import UserAuth
+from datetime import datetime, timedelta
 
 diary_db = None
 user_auth = UserAuth()
@@ -78,6 +79,7 @@ def home():
         'today_mood': diary_db.get_today_mood() if diary_db else '未填写',
         'todo_stats': diary_db.get_todo_stats() if diary_db else {'total': 0, 'not_started': 0, 'in_progress': 0, 'completed': 0, 'cancelled': 0}
     }
+    
     return render_template('home.html', user=user)
 
 
@@ -151,7 +153,24 @@ def todos():
         todos = all_todos
     
     stats = diary_db.get_todo_stats()
-    return render_template('todos.html', todos=todos, stats=stats, current_filter=status_filter)
+    
+        events = []
+    for i, record in enumerate(diary_db.get_all_records()):
+        date_str = record.get('date')  # 举例：'2025-07-10'
+        if date_str:
+            try:
+                dt = datetime.strptime(date_str, '%Y-%m-%d')  # 调整格式取决于你的实际字段
+            except ValueError:
+                continue  # 忽略格式不对的
+            events.append({
+                'id': str(i),
+                'calendarId': '1',
+                'title': record.get('mood') or '写了日记',
+                'category': 'time',
+                'start': dt.isoformat(),
+                'end': (dt + timedelta(minutes=30)).isoformat()
+            })
+    return render_template('todos.html', todos=todos, stats=stats, current_filter=status_filter, events=events)
 
 
 @main_bp.route('/todos/add', methods=['GET', 'POST'])
