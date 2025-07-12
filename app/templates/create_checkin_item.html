@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>创建日常打卡项目 - InsightMe</title>
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/common.css') }}" rel="stylesheet">
+    <style>
+        .form-container {
+            margin: 0 auto;
+        }
+        .form-section {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            border: 1px solid #e5e7eb;
+            margin-bottom: 1.5rem;
+        }
+        .section-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .icon-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            gap: 0.8rem;
+            margin-top: 0.5rem;
+        }
+        .icon-option {
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #e5e7eb;
+            border-radius: 0.8rem;
+            cursor: pointer;
+            font-size: 1.5rem;
+            transition: all 0.2s;
+        }
+        .icon-option:hover {
+            border-color: #3b82f6;
+            background: #f0f9ff;
+        }
+        .icon-option.selected {
+            border-color: #3b82f6;
+            background: #3b82f6;
+            color: white;
+        }
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+            gap: 0.8rem;
+            margin-top: 0.5rem;
+        }
+        .color-option {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid #e5e7eb;
+            transition: all 0.2s;
+        }
+        .color-option:hover {
+            transform: scale(1.1);
+        }
+        .color-option.selected {
+            border-color: #1e293b;
+            transform: scale(1.1);
+        }
+        .form-label {
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+        .form-control, .form-select {
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.25);
+        }
+        @media (max-width: 768px) {
+            .icon-grid {
+                grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
+                gap: 0.6rem;
+            }
+            .color-grid {
+                grid-template-columns: repeat(auto-fill, minmax(35px, 1fr));
+                gap: 0.6rem;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="card-common">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="page-title">创建日常打卡项目</div>
+        <div>
+            <a class="btn btn-outline-primary" href="{{ url_for('main.checkin') }}">返回日常打卡</a>
+        </div>
+    </div>
+    <hr>
+    
+    <div class="form-container">
+        <form method="post">
+            <div class="form-section">
+                <div class="section-title">
+                    📝 基本信息
+                </div>
+            <div class="mb-3">
+                <label class="form-label">项目标题 *</label>
+                <input type="text" class="form-control" name="title" required placeholder="例如：每日阅读">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">项目描述</label>
+                <textarea class="form-control" name="description" rows="3" placeholder="描述一下这个打卡项目的目的和内容"></textarea>
+            </div>
+        </div>
+        
+            <div class="form-section">
+                <div class="section-title">
+                    ⏰ 打卡设置
+                </div>
+            <div class="mb-3">
+                <label class="form-label">打卡频率 *</label>
+                <select class="form-select" name="frequency" required>
+                    <option value="daily">每日打卡</option>
+                    <option value="weekly">每周打卡</option>
+                    <option value="monthly">每月打卡</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">目标天数</label>
+                <input type="number" class="form-control" name="target_days" min="0" placeholder="0表示无限制">
+                <div class="form-text">设置为0表示无限制，可以一直打卡</div>
+            </div>
+        </div>
+        
+            <div class="form-section">
+                <div class="section-title">
+                    🎨 外观设置
+                </div>
+            <div class="mb-3">
+                <label class="form-label">选择图标</label>
+                <input type="text" class="form-control" name="icon" id="icon-input" value="✅" required>
+                <div class="icon-grid">
+                    <div class="icon-option" data-icon="✅">✅</div>
+                    <div class="icon-option" data-icon="📚">📚</div>
+                    <div class="icon-option" data-icon="🏃">🏃</div>
+                    <div class="icon-option" data-icon="💧">💧</div>
+                    <div class="icon-option" data-icon="🧘">🧘</div>
+                    <div class="icon-option" data-icon="✍️">✍️</div>
+                    <div class="icon-option" data-icon="🎯">🎯</div>
+                    <div class="icon-option" data-icon="💪">💪</div>
+                    <div class="icon-option" data-icon="🌱">🌱</div>
+                    <div class="icon-option" data-icon="⭐">⭐</div>
+                    <div class="icon-option" data-icon="🔥">🔥</div>
+                    <div class="icon-option" data-icon="💎">💎</div>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">选择颜色</label>
+                <input type="text" class="form-control" name="color" id="color-input" value="#3b82f6" required>
+                <div class="color-grid">
+                    <div class="color-option selected" data-color="#3b82f6" style="background-color: #3b82f6;"></div>
+                    <div class="color-option" data-color="#10b981" style="background-color: #10b981;"></div>
+                    <div class="color-option" data-color="#f59e0b" style="background-color: #f59e0b;"></div>
+                    <div class="color-option" data-color="#ef4444" style="background-color: #ef4444;"></div>
+                    <div class="color-option" data-color="#8b5cf6" style="background-color: #8b5cf6;"></div>
+                    <div class="color-option" data-color="#06b6d4" style="background-color: #06b6d4;"></div>
+                    <div class="color-option" data-color="#84cc16" style="background-color: #84cc16;"></div>
+                    <div class="color-option" data-color="#f97316" style="background-color: #f97316;"></div>
+                    <div class="color-option" data-color="#ec4899" style="background-color: #ec4899;"></div>
+                    <div class="color-option" data-color="#6b7280" style="background-color: #6b7280;"></div>
+                </div>
+            </div>
+        </div>
+        
+            <button class="btn btn-success w-100" type="submit">创建日常打卡项目</button>
+        </form>
+    </div>
+</div>
+
+<script>
+// 图标选择
+document.querySelectorAll('.icon-option').forEach(option => {
+    option.addEventListener('click', function() {
+        document.querySelectorAll('.icon-option').forEach(opt => opt.classList.remove('selected'));
+        this.classList.add('selected');
+        document.getElementById('icon-input').value = this.dataset.icon;
+    });
+});
+
+// 颜色选择
+document.querySelectorAll('.color-option').forEach(option => {
+    option.addEventListener('click', function() {
+        document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('selected'));
+        this.classList.add('selected');
+        document.getElementById('color-input').value = this.dataset.color;
+    });
+});
+</script>
+</body>
+</html> 

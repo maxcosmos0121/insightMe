@@ -76,7 +76,8 @@ def home():
         'diary_count': len(diary_db.get_all_records()) if diary_db else 0,
         'streak': diary_db.get_streak() if diary_db else 0,
         'today_mood': diary_db.get_today_mood() if diary_db else '未填写',
-        'todo_stats': diary_db.get_todo_stats() if diary_db else {'total': 0, 'not_started': 0, 'in_progress': 0, 'completed': 0, 'cancelled': 0}
+        'todo_stats': diary_db.get_todo_stats() if diary_db else {'total': 0, 'not_started': 0, 'in_progress': 0, 'completed': 0, 'cancelled': 0},
+        'checkin_stats': diary_db.get_checkin_stats() if diary_db else {'total_items': 0, 'today_checked': 0, 'total_records_today': 0, 'streak': 0}
     }
     return render_template('home.html', user=user)
 
@@ -280,3 +281,132 @@ def cancel_todo(todo_id):
         return redirect(url_for('main.todos'))
     
     return render_template('cancel_todo.html', todo=todo)
+
+# 打卡相关路由
+@main_bp.route('/checkin')
+def checkin():
+    if 'username' not in session:
+        return redirect(url_for('main.login'))
+    
+    items = diary_db.get_all_checkin_items()
+    stats = diary_db.get_checkin_stats()
+    return render_template('checkin.html', items=items, stats=stats)
+
+
+@main_bp.route('/checkin/create', methods=['GET', 'POST'])
+def create_checkin_item():
+    if 'username' not in session:
+        return redirect(url_for('main.login'))
+    
+    if request.method == 'POST':
+        target_days_str = request.form.get('target_days', '0')
+        target_days = int(target_days_str) if target_days_str.strip() else 0
+        
+        data = {
+            'title': request.form.get('title', ''),
+            'description': request.form.get('description', ''),
+            'frequency': request.form.get('frequency', 'daily'),
+            'target_days': target_days,
+            'icon': request.form.get('icon', '✅'),
+            'color': request.form.get('color', '#3b82f6'),
+            'is_active': True
+        }
+        
+        diary_db.add_checkin_item(data)
+        return redirect(url_for('main.checkin'))
+    
+    return render_template('create_checkin_item.html')
+
+
+@main_bp.route('/checkin/edit/<int:item_id>', methods=['GET', 'POST'])
+def edit_checkin_item(item_id):
+    if 'username' not in session:
+        return redirect(url_for('main.login'))
+    
+    item = diary_db.get_checkin_item_by_id(item_id)
+    if not item:
+        return redirect(url_for('main.checkin'))
+    
+    if request.method == 'POST':
+        target_days_str = request.form.get('target_days', '0')
+        target_days = int(target_days_str) if target_days_str.strip() else 0
+        
+        data = {
+            'title': request.form.get('title', ''),
+            'description': request.form.get('description', ''),
+            'frequency': request.form.get('frequency', 'daily'),
+            'target_days': target_days,
+            'icon': request.form.get('icon', '✅'),
+            'color': request.form.get('color', '#3b82f6'),
+            'is_active': request.form.get('is_active') == 'on'
+        }
+        
+        diary_db.update_checkin_item(item_id, data)
+        return redirect(url_for('main.checkin'))
+    
+    return render_template('edit_checkin_item.html', item=item)
+
+
+@main_bp.route('/checkin/delete/<int:item_id>')
+def delete_checkin_item(item_id):
+    if 'username' not in session:
+        return redirect(url_for('main.login'))
+    
+    diary_db.delete_checkin_item(item_id)
+    return redirect(url_for('main.checkin'))
+
+
+@main_bp.route('/checkin/do/<int:item_id>', methods=['GET', 'POST'])
+def do_checkin(item_id):
+    if 'username' not in session:
+        return redirect(url_for('main.login'))
+    
+    if request.method == 'POST':
+        note = request.form.get('note', '')
+        mood = request.form.get('mood', '')
+        
+        success, message = diary_db.add_checkin_record(item_id, note, mood)
+        if success:
+            return redirect(url_for('main.checkin'))
+        else:
+            item = diary_db.get_checkin_item_by_id(item_id)
+            return render_template('do_checkin.html', item=item, error=message)
+    
+    item = diary_db.get_checkin_item_by_id(item_id)
+    if not item:
+        return redirect(url_for('main.checkin'))
+    
+    return render_template('do_checkin.html', item=item)
+
+
+@main_bp.route('/checkin/history')
+def checkin_history():
+    if 'username' not in session:
+        return redirect(url_for('main.login'))
+    
+    item_id = request.args.get('item_id', type=int)
+    days = request.args.get('days', 30, type=int)
+    
+    items = diary_db.get_all_checkin_items()
+    records = diary_db.get_checkin_records(item_id, days)
+    
+    # 计算统计数据
+    from datetime import datetime, timedelta
+    today = datetime.now().date()
+    week_start = today - timedelta(days=today.weekday())
+    month_start = today.replace(day=1)
+    
+    # 获取统计数据
+    total_records = len(diary_db.get_checkin_records(None, 365)) if diary_db else 0  # 一年内的总记录
+    today_records = len(diary_db.get_checkin_records(None, 1)) if diary_db else 0  # 今日记录
+    week_records = len(diary_db.get_checkin_records(None, 7)) if diary_db else 0  # 本周记录
+    month_records = len(diary_db.get_checkin_records(None, 30)) if diary_db else 0  # 本月记录
+    
+    stats = {
+        'total_records': total_records,
+        'today_records': today_records,
+        'week_records': week_records,
+        'month_records': month_records
+    }
+    
+    return render_template('checkin_history.html', items=items, records=records, selected_item_id=item_id, days=days, stats=stats)

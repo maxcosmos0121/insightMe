@@ -207,6 +207,14 @@
                         <div class="stat-number">{{ user.todo_stats.completed or 0 }}</div>
                         <div class="stat-label">已完成</div>
                     </div>
+                    <div class="stat-item">
+                        <div class="stat-number">{{ user.checkin_stats.total_items or 0 }}</div>
+                        <div class="stat-label">打卡项目</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">{{ user.checkin_stats.today_checked or 0 }}/{{ user.checkin_stats.total_records_today or 0 }}</div>
+                        <div class="stat-label">今日打卡</div>
+                    </div>
                 </div>
             </div>
             
@@ -239,6 +247,10 @@
                     <a class="action-link" href="{{ url_for('main.profile') }}">
                         <span class="action-icon">👤</span>
                         个人资料
+                    </a>
+                    <a class="action-link" href="{{ url_for('main.checkin') }}">
+                        <span class="action-icon">⚡</span>
+                        日常打卡
                     </a>
                 </div>
             </div>

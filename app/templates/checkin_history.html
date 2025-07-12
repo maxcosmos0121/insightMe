@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>日常打卡历史 - InsightMe</title>
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/common.css') }}" rel="stylesheet">
+    <style>
+        .stats-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 0.8rem;
+            margin-bottom: 1.5rem;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 0.8rem;
+            padding: 1rem;
+            border: 1px solid #e5e7eb;
+            text-align: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.3rem;
+        }
+        .stat-label {
+            font-size: 0.8rem;
+            color: #64748b;
+            font-weight: 500;
+        }
+        /* 不同状态的颜色区分 */
+        .stat-card.total {
+            border-left: 4px solid #3b82f6;
+        }
+        .stat-card.total .stat-number {
+            color: #3b82f6;
+        }
+        .stat-card.today {
+            border-left: 4px solid #10b981;
+        }
+        .stat-card.today .stat-number {
+            color: #10b981;
+        }
+        .stat-card.week {
+            border-left: 4px solid #f59e0b;
+        }
+        .stat-card.week .stat-number {
+            color: #f59e0b;
+        }
+        .stat-card.month {
+            border-left: 4px solid #8b5cf6;
+        }
+        .stat-card.month .stat-number {
+            color: #8b5cf6;
+        }
+        
+        .checkin-filters {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+        .filter-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            background: white;
+            color: #64748b;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+        .filter-btn:hover {
+            background: #f8fafc;
+            border-color: #2563eb;
+            color: #2563eb;
+            text-decoration: none;
+        }
+        .filter-btn.active {
+            background: #2563eb;
+            color: white;
+            border-color: #2563eb;
+            font-weight: 600;
+        }
+        
+        .filter-section {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .records-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .record-card {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            border: 1px solid #e5e7eb;
+            position: relative;
+            transition: box-shadow 0.2s, transform 0.2s;
+        }
+        .record-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transform: translateY(-1px);
+        }
+        
+        /* 主要内容区域 */
+        .record-main-content {
+            margin-bottom: 1.2rem;
+        }
+        .record-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 0.8rem;
+            line-height: 1.4;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .record-date {
+            font-size: 0.9rem;
+            color: #64748b;
+            font-weight: 500;
+        }
+        
+        /* 内容信息区域 */
+        .record-content-section {
+            background: #f8fafc;
+            border-radius: 0.6rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        .content-section-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        .record-note {
+            font-size: 0.95rem;
+            color: #374151;
+            margin-bottom: 0.5rem;
+            white-space: pre-line;
+            line-height: 1.4;
+        }
+        .record-mood {
+            font-size: 0.9rem;
+            color: #64748b;
+            font-weight: 500;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #64748b;
+        }
+        .empty-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        .empty-state h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .empty-state p {
+            font-size: 0.95rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        @media (max-width: 768px) {
+            .checkin-filters {
+                flex-direction: column;
+            }
+            .filter-section .row {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="card-common">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="page-title">日常打卡历史</div>
+        <div>
+            <a class="btn btn-outline-primary" href="{{ url_for('main.checkin') }}">返回日常打卡</a>
+        </div>
+    </div>
+    <hr>
+
+    <div class="stats-cards">
+        <div class="stat-card total">
+            <div class="stat-number">{{ stats.total_records }}</div>
+            <div class="stat-label">总打卡次数</div>
+        </div>
+        <div class="stat-card today">
+            <div class="stat-number">{{ stats.today_records }}</div>
+            <div class="stat-label">今日打卡</div>
+        </div>
+        <div class="stat-card week">
+            <div class="stat-number">{{ stats.week_records }}</div>
+            <div class="stat-label">本周打卡</div>
+        </div>
+        <div class="stat-card month">
+            <div class="stat-number">{{ stats.month_records }}</div>
+            <div class="stat-label">本月打卡</div>
+        </div>
+    </div>
+    
+    <div class="filter-section">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">选择项目</label>
+                <select class="form-select" name="item_id">
+                    <option value="">所有项目</option>
+                    {% for item in items %}
+                    <option value="{{ item.id }}" {% if selected_item_id == item.id %}selected{% endif %}>
+                        {{ item.icon }} {{ item.title }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">查询天数</label>
+                <select class="form-select" name="days">
+                    <option value="7" {% if days == 7 %}selected{% endif %}>最近7天</option>
+                    <option value="30" {% if days == 30 %}selected{% endif %}>最近30天</option>
+                    <option value="90" {% if days == 90 %}selected{% endif %}>最近90天</option>
+                    <option value="365" {% if days == 365 %}selected{% endif %}>最近一年</option>
+                </select>
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary">筛选</button>
+            </div>
+        </form>
+    </div>
+    
+    {% if records %}
+    <div class="records-list">
+        {% for record in records %}
+        <div class="record-card">
+            <!-- 主要内容区域 -->
+            <div class="record-main-content">
+                <div class="record-title">
+                    {{ record.item_icon }} {{ record.item_title }}
+                </div>
+                <div class="record-date">
+                    {{ record.checkin_date }}
+                </div>
+            </div>
+            
+            <!-- 内容信息区域 -->
+            {% if record.note or record.mood %}
+            <div class="record-content-section">
+                <div class="content-section-title">
+                    📝 打卡详情
+                </div>
+                {% if record.note %}
+                <div class="record-note">{{ record.note }}</div>
+                {% endif %}
+                {% if record.mood %}
+                <div class="record-mood">心情：{{ record.mood }}</div>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">📊</div>
+        <h3>暂无日常打卡记录</h3>
+        <p>开始日常打卡，记录您的成长历程吧！</p>
+        <a class="btn btn-primary" href="{{ url_for('main.checkin') }}">去打卡</a>
+    </div>
+    {% endif %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 
