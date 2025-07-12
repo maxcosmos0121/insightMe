@@ -1,8 +1,10 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, jsonify
 
 from app.models import DiaryDB
+from app.auth import UserAuth
 
 diary_db = None
+user_auth = UserAuth()
 main_bp = Blueprint('main', __name__)
 
 
@@ -16,14 +18,44 @@ def before_request():
         diary_db = None
 
 
+@main_bp.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '').strip()
+        confirm_password = request.form.get('confirm_password', '').strip()
+        
+        if not username or not password or not confirm_password:
+            return render_template('register.html', error='所有字段都必须填写')
+        
+        if password != confirm_password:
+            return render_template('register.html', error='两次输入的密码不一致')
+        
+        success, message = user_auth.register_user(username, password)
+        if success:
+            return render_template('register.html', success=message)
+        else:
+            return render_template('register.html', error=message)
+    
+    return render_template('register.html')
+
+
 @main_bp.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        username = request.form.get('username')
-        if not username:
-            return render_template('login.html', error='用户名不能为空')
-        session['username'] = username
-        return redirect(url_for('main.home'))  # 登录后跳转到首页
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '').strip()
+        
+        if not username or not password:
+            return render_template('login.html', error='用户名和密码不能为空')
+        
+        success, message = user_auth.verify_user(username, password)
+        if success:
+            session['username'] = username
+            return redirect(url_for('main.home'))
+        else:
+            return render_template('login.html', error=message)
+    
     return render_template('login.html')
 
 
