@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>编辑任务 - InsightMe</title>
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/common.css') }}" rel="stylesheet">
+    <style>
+
+        .form-container {
+            margin: 0 auto;
+        }
+        .form-section {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            border: 1px solid #e5e7eb;
+            margin-bottom: 1.5rem;
+        }
+        .section-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .quadrant-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.8rem;
+            margin-bottom: 0.5rem;
+        }
+        .quadrant-option {
+            border: 2px solid #e5e7eb;
+            border-radius: 0.8rem;
+            padding: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+        .quadrant-option:hover {
+            border-color: #2563eb;
+            background: #f8fafc;
+        }
+        .quadrant-option.selected {
+            border-color: #2563eb;
+            background: #eff6ff;
+        }
+        .quadrant-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        .quadrant-desc {
+            font-size: 0.9rem;
+            color: #64748b;
+        }
+        .time-inputs {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 0.8rem;
+        }
+        .form-label {
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+        .form-control, .form-select {
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.25);
+        }
+
+        .status-section {
+            background: #f8fafc;
+            border-radius: 0.8rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .status-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .status-badge {
+            padding: 0.3rem 0.8rem;
+            border-radius: 0.5rem;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        .status-not-started {
+            background: #f1f5f9;
+            color: #64748b;
+        }
+        .status-in-progress {
+            background: #dbeafe;
+            color: #2563eb;
+        }
+        .status-completed {
+            background: #dcfce7;
+            color: #059669;
+        }
+        .status-cancelled {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+        @media (max-width: 768px) {
+            .quadrant-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.6rem;
+            }
+            .time-inputs {
+                grid-template-columns: 1fr;
+                gap: 0.6rem;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="card-common">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="page-title">编辑任务</div>
+        <div>
+            <a class="btn btn-outline-primary" href="{{ url_for('main.todos') }}">返回列表</a>
+        </div>
+    </div>
+    <hr>
+
+    <div class="form-container">
+        <form method="POST">
+            {% if todo.status == '未开始' %}
+            <!-- 未开始状态：可以编辑所有基本信息 -->
+            <div class="form-section">
+                <div class="section-title">
+                    任务内容
+                </div>
+                <div class="mb-3">
+                    <textarea class="form-control" id="content" name="content" rows="3" placeholder="请描述您要完成的任务..." required>{{ todo.content }}</textarea>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <div class="section-title">
+                    任务象限
+                </div>
+                <div class="quadrant-grid">
+                    <div class="quadrant-option" data-value="重要紧急">
+                        <div class="quadrant-title text-danger">重要紧急</div>
+                        <div class="quadrant-desc">立即处理，避免危机</div>
+                    </div>
+                    <div class="quadrant-option" data-value="重要不紧急">
+                        <div class="quadrant-title text-success">重要不紧急</div>
+                        <div class="quadrant-desc">规划安排，长期目标</div>
+                    </div>
+                    <div class="quadrant-option" data-value="不重要紧急">
+                        <div class="quadrant-title text-warning">不重要紧急</div>
+                        <div class="quadrant-desc">委托他人，减少干扰</div>
+                    </div>
+                    <div class="quadrant-option" data-value="不重要不紧急">
+                        <div class="quadrant-title text-muted">不重要不紧急</div>
+                        <div class="quadrant-desc">避免或删除</div>
+                    </div>
+                </div>
+                <input type="hidden" id="quadrant" name="quadrant" value="{{ todo.quadrant }}" required>
+            </div>
+            {% else %}
+            <!-- 非未开始状态：只显示基本信息，不可编辑 -->
+            <div class="form-section">
+                <div class="section-title">
+                    任务内容
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">任务内容</label>
+                    <div class="form-control-plaintext">{{ todo.content }}</div>
+                    <input type="hidden" id="content" name="content" value="{{ todo.content }}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">任务象限</label>
+                    <div class="form-control-plaintext">{{ todo.quadrant }}</div>
+                    <input type="hidden" id="quadrant" name="quadrant" value="{{ todo.quadrant }}">
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="form-section">
+                <div class="section-title">
+                    时间安排
+                </div>
+                {% if todo.status == '未开始' %}
+                <!-- 未开始状态：可以编辑时间安排 -->
+                <div class="time-inputs">
+                    <div class="mb-3">
+                        <label for="planned_start" class="form-label">计划开始时间</label>
+                        <input type="datetime-local" class="form-control" id="planned_start" name="planned_start" 
+                               value="{{ todo.planned_start.replace(' ', 'T') if todo.planned_start else '' }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="planned_end" class="form-label">计划结束时间</label>
+                        <input type="datetime-local" class="form-control" id="planned_end" name="planned_end"
+                               value="{{ todo.planned_end.replace(' ', 'T') if todo.planned_end else '' }}">
+                    </div>
+                </div>
+                {% else %}
+                <!-- 非未开始状态：只显示时间信息 -->
+                <div class="time-inputs">
+                    {% if todo.planned_start %}
+                    <div class="mb-3">
+                        <label class="form-label">计划开始时间</label>
+                        <div class="form-control-plaintext">{{ todo.planned_start }}</div>
+                        <input type="hidden" id="planned_start" name="planned_start" value="{{ todo.planned_start }}">
+                    </div>
+                    {% endif %}
+                    {% if todo.planned_end %}
+                    <div class="mb-3">
+                        <label class="form-label">计划结束时间</label>
+                        <div class="form-control-plaintext">{{ todo.planned_end }}</div>
+                        <input type="hidden" id="planned_end" name="planned_end" value="{{ todo.planned_end }}">
+                    </div>
+                    {% endif %}
+                    {% if todo.actual_start %}
+                    <div class="mb-3">
+                        <label class="form-label">实际开始时间</label>
+                        <div class="form-control-plaintext">{{ todo.actual_start }}</div>
+                        <input type="hidden" id="actual_start" name="actual_start" value="{{ todo.actual_start }}">
+                    </div>
+                    {% endif %}
+                    {% if todo.actual_end %}
+                    <div class="mb-3">
+                        <label class="form-label">实际结束时间</label>
+                        <div class="form-control-plaintext">{{ todo.actual_end }}</div>
+                        <input type="hidden" id="actual_end" name="actual_end" value="{{ todo.actual_end }}">
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="form-section">
+                <div class="section-title">
+                    任务状态
+                </div>
+                <div class="status-section">
+                    <div class="status-info">
+                        <span>当前状态：</span>
+                        <span class="status-badge status-{{ todo.status.replace(' ', '-').lower() }}">{{ todo.status }}</span>
+                    </div>
+                    <input type="hidden" id="status" name="status" value="{{ todo.status }}">
+                </div>
+            </div>
+
+
+
+            <button class="btn btn-success w-100" type="submit">保存</button>
+        </form>
+    </div>
+</div>
+
+<script>
+// 象限选择功能
+document.querySelectorAll('.quadrant-option').forEach(option => {
+    option.addEventListener('click', function() {
+        // 移除其他选中状态
+        document.querySelectorAll('.quadrant-option').forEach(opt => {
+            opt.classList.remove('selected');
+        });
+        // 添加当前选中状态
+        this.classList.add('selected');
+        // 设置隐藏输入框的值
+        document.getElementById('quadrant').value = this.dataset.value;
+    });
+});
+
+// 根据当前选中的象限设置选中状态
+document.addEventListener('DOMContentLoaded', function() {
+    const currentQuadrant = document.getElementById('quadrant').value;
+    document.querySelectorAll('.quadrant-option').forEach(option => {
+        if (option.dataset.value === currentQuadrant) {
+            option.classList.add('selected');
+        }
+    });
+});
+
+// 表单验证
+document.querySelector('form').addEventListener('submit', function(e) {
+    const content = document.getElementById('content').value.trim();
+    const quadrant = document.getElementById('quadrant').value;
+    
+    if (!content) {
+        e.preventDefault();
+        alert('请填写任务内容');
+        return;
+    }
+    
+    if (!quadrant) {
+        e.preventDefault();
+        alert('请选择任务象限分类');
+        return;
+    }
+});
+</script>
+</body>
+</html> 

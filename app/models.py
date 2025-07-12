@@ -35,10 +35,25 @@ class DiaryDB:
             company = CharField(null=True)
             skills = TextField(null=True)
 
+        class Todo(BaseModel):
+            id = AutoField(primary_key=True)
+            content = TextField()  # 任务内容
+            quadrant = CharField()  # 任务象限分类：重要紧急、重要不紧急、不重要紧急、不重要不紧急
+            planned_start = DateTimeField(null=True)  # 计划开始时间
+            planned_end = DateTimeField(null=True)  # 计划结束时间
+            actual_start = DateTimeField(null=True)  # 实际开始时间
+            actual_end = DateTimeField(null=True)  # 实际结束时间
+            status = CharField(default='未开始')  # 执行状态：未开始、进行中、已完成、取消
+            completion_note = TextField(null=True)  # 完成情况说明
+            cancel_reason = TextField(null=True)  # 取消原因
+            created_at = DateTimeField(default=datetime.now)  # 创建时间
+            updated_at = DateTimeField(default=datetime.now)  # 更新时间
+
         self.Diary = Diary
         self.UserProfile = UserProfile
+        self.Todo = Todo
         self.db.connect(reuse_if_open=True)
-        self.db.create_tables([self.Diary, self.UserProfile])
+        self.db.create_tables([self.Diary, self.UserProfile, self.Todo])
 
     def today(self):
         return datetime.now().strftime('%Y-%m-%d')
@@ -135,3 +150,84 @@ class DiaryDB:
             for k, v in data.items():
                 setattr(profile, k, v)
             profile.save()
+
+    # 待做清单相关方法
+    def add_todo(self, data: dict):
+        """添加待做任务"""
+        return self.Todo.create(**data)
+
+    def get_all_todos(self) -> List[Dict]:
+        """获取所有待做任务"""
+        query = self.Todo.select().order_by(self.Todo.created_at.desc())
+        return [
+            {
+                'id': todo.id,
+                'content': todo.content,
+                'quadrant': todo.quadrant,
+                'planned_start': todo.planned_start.strftime('%Y-%m-%d %H:%M') if todo.planned_start else '',
+                'planned_end': todo.planned_end.strftime('%Y-%m-%d %H:%M') if todo.planned_end else '',
+                'actual_start': todo.actual_start.strftime('%Y-%m-%d %H:%M') if todo.actual_start else '',
+                'actual_end': todo.actual_end.strftime('%Y-%m-%d %H:%M') if todo.actual_end else '',
+                'status': todo.status,
+                'completion_note': todo.completion_note,
+                'cancel_reason': todo.cancel_reason,
+                'created_at': todo.created_at.strftime('%Y-%m-%d %H:%M'),
+                'updated_at': todo.updated_at.strftime('%Y-%m-%d %H:%M')
+            }
+            for todo in query
+        ]
+
+    def get_todo_by_id(self, todo_id: int) -> Dict:
+        """根据ID获取待做任务"""
+        todo = self.Todo.get_or_none(self.Todo.id == todo_id)
+        if todo:
+            return {
+                'id': todo.id,
+                'content': todo.content,
+                'quadrant': todo.quadrant,
+                'planned_start': todo.planned_start.strftime('%Y-%m-%d %H:%M') if todo.planned_start else '',
+                'planned_end': todo.planned_end.strftime('%Y-%m-%d %H:%M') if todo.planned_end else '',
+                'actual_start': todo.actual_start.strftime('%Y-%m-%d %H:%M') if todo.actual_start else '',
+                'actual_end': todo.actual_end.strftime('%Y-%m-%d %H:%M') if todo.actual_end else '',
+                'status': todo.status,
+                'completion_note': todo.completion_note,
+                'cancel_reason': todo.cancel_reason,
+                'created_at': todo.created_at.strftime('%Y-%m-%d %H:%M'),
+                'updated_at': todo.updated_at.strftime('%Y-%m-%d %H:%M')
+            }
+        return None
+
+    def update_todo(self, todo_id: int, data: dict):
+        """更新待做任务"""
+        data['updated_at'] = datetime.now()
+        todo = self.Todo.get_or_none(self.Todo.id == todo_id)
+        if todo:
+            for k, v in data.items():
+                setattr(todo, k, v)
+            todo.save()
+            return True
+        return False
+
+    def delete_todo(self, todo_id: int):
+        """删除待做任务"""
+        todo = self.Todo.get_or_none(self.Todo.id == todo_id)
+        if todo:
+            todo.delete_instance()
+            return True
+        return False
+
+    def get_todo_stats(self) -> Dict:
+        """获取待做任务统计"""
+        total = self.Todo.select().count()
+        not_started = self.Todo.select().where(self.Todo.status == '未开始').count()
+        in_progress = self.Todo.select().where(self.Todo.status == '进行中').count()
+        completed = self.Todo.select().where(self.Todo.status == '已完成').count()
+        cancelled = self.Todo.select().where(self.Todo.status == '取消').count()
+        
+        return {
+            'total': total,
+            'not_started': not_started,
+            'in_progress': in_progress,
+            'completed': completed,
+            'cancelled': cancelled
+        }

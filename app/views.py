@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, session
+from flask import Blueprint, render_template, request, redirect, url_for, session, jsonify
 
 from app.models import DiaryDB
 
@@ -37,7 +37,8 @@ def home():
         'nickname': diary_db.get_profile().get('name', '') if diary_db else '',
         'diary_count': len(diary_db.get_all_records()) if diary_db else 0,
         'streak': diary_db.get_streak() if diary_db else 0,
-        'today_mood': diary_db.get_today_mood() if diary_db else '未填写'
+        'today_mood': diary_db.get_today_mood() if diary_db else '未填写',
+        'todo_stats': diary_db.get_todo_stats() if diary_db else {'total': 0, 'not_started': 0, 'in_progress': 0, 'completed': 0, 'cancelled': 0}
     }
     return render_template('home.html', user=user)
 
@@ -94,3 +95,150 @@ def profile():
 def logout():
     session.pop('username', None)
     return redirect(url_for('main.login'))
+
+# 待做清单相关路由
+@main_bp.route('/todos')
+def todos():
+    if 'username' not in session:
+        return redirect(url_for('main.login'))
+    
+    # 获取筛选参数
+    status_filter = request.args.get('status', '')
+    
+    # 获取所有任务并根据状态筛选
+    all_todos = diary_db.get_all_todos()
+    if status_filter:
+        todos = [todo for todo in all_todos if todo['status'] == status_filter]
+    else:
+        todos = all_todos
+    
+    stats = diary_db.get_todo_stats()
+    return render_template('todos.html', todos=todos, stats=stats, current_filter=status_filter)
+
+
+@main_bp.route('/todos/add', methods=['GET', 'POST'])
+def add_todo():
+    if 'username' not in session:
+        return redirect(url_for('main.login'))
+    
+    if request.method == 'POST':
+        from datetime import datetime
+        
+        # 处理时间字段
+        planned_start = request.form.get('planned_start')
+        planned_end = request.form.get('planned_end')
+        
+        data = {
+            'content': request.form.get('content', ''),
+            'quadrant': request.form.get('quadrant', ''),
+            'planned_start': datetime.strptime(planned_start, '%Y-%m-%dT%H:%M') if planned_start else None,
+            'planned_end': datetime.strptime(planned_end, '%Y-%m-%dT%H:%M') if planned_end else None,
+            'status': '未开始'
+        }
+        
+        diary_db.add_todo(data)
+        return redirect(url_for('main.todos'))
+    
+    return render_template('add_todo.html')
+
+
+@main_bp.route('/todos/edit/<int:todo_id>', methods=['GET', 'POST'])
+def edit_todo(todo_id):
+    if 'username' not in session:
+        return redirect(url_for('main.login'))
+    
+    if request.method == 'POST':
+        from datetime import datetime
+        
+        # 处理时间字段
+        planned_start = request.form.get('planned_start')
+        planned_end = request.form.get('planned_end')
+        
+        data = {
+            'content': request.form.get('content', ''),
+            'quadrant': request.form.get('quadrant', ''),
+            'planned_start': datetime.strptime(planned_start, '%Y-%m-%dT%H:%M') if planned_start else None,
+            'planned_end': datetime.strptime(planned_end, '%Y-%m-%dT%H:%M') if planned_end else None,
+            'status': request.form.get('status', '')
+        }
+        
+        diary_db.update_todo(todo_id, data)
+        return redirect(url_for('main.todos'))
+    
+    todo = diary_db.get_todo_by_id(todo_id)
+    if not todo:
+        return redirect(url_for('main.todos'))
+    
+    return render_template('edit_todo.html', todo=todo)
+
+
+@main_bp.route('/todos/delete/<int:todo_id>')
+def delete_todo(todo_id):
+    if 'username' not in session:
+        return redirect(url_for('main.login'))
+    
+    diary_db.delete_todo(todo_id)
+    return redirect(url_for('main.todos'))
+
+
+@main_bp.route('/todos/status/<int:todo_id>/<status>')
+def update_todo_status(todo_id, status):
+    if 'username' not in session:
+        return redirect(url_for('main.login'))
+    
+    data = {'status': status}
+    if status == '进行中':
+        from datetime import datetime
+        data['actual_start'] = datetime.now()
+    elif status == '已完成':
+        from datetime import datetime
+        data['actual_end'] = datetime.now()
+    
+    diary_db.update_todo(todo_id, data)
+    return redirect(url_for('main.todos'))
+
+
+@main_bp.route('/todos/complete/<int:todo_id>', methods=['GET', 'POST'])
+def complete_todo(todo_id):
+    if 'username' not in session:
+        return redirect(url_for('main.login'))
+    
+    if request.method == 'POST':
+        completion_note = request.form.get('completion_note', '')
+        data = {
+            'status': '已完成',
+            'completion_note': completion_note
+        }
+        from datetime import datetime
+        data['actual_end'] = datetime.now()
+        
+        diary_db.update_todo(todo_id, data)
+        return redirect(url_for('main.todos'))
+    
+    todo = diary_db.get_todo_by_id(todo_id)
+    if not todo:
+        return redirect(url_for('main.todos'))
+    
+    return render_template('complete_todo.html', todo=todo)
+
+
+@main_bp.route('/todos/cancel/<int:todo_id>', methods=['GET', 'POST'])
+def cancel_todo(todo_id):
+    if 'username' not in session:
+        return redirect(url_for('main.login'))
+    
+    if request.method == 'POST':
+        cancel_reason = request.form.get('cancel_reason', '')
+        data = {
+            'status': '取消',
+            'cancel_reason': cancel_reason
+        }
+        
+        diary_db.update_todo(todo_id, data)
+        return redirect(url_for('main.todos'))
+    
+    todo = diary_db.get_todo_by_id(todo_id)
+    if not todo:
+        return redirect(url_for('main.todos'))
+    
+    return render_template('cancel_todo.html', todo=todo)

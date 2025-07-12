@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>待做清单 - InsightMe</title>
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/common.css') }}" rel="stylesheet">
+    <style>
+
+        .stats-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 0.8rem;
+            margin-bottom: 1.5rem;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 0.8rem;
+            padding: 1rem;
+            border: 1px solid #e5e7eb;
+            text-align: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.3rem;
+        }
+        .stat-label {
+            font-size: 0.8rem;
+            color: #64748b;
+            font-weight: 500;
+        }
+        /* 不同状态的颜色区分 */
+        .stat-card.total {
+            border-left: 4px solid #3b82f6;
+        }
+        .stat-card.total .stat-number {
+            color: #3b82f6;
+        }
+        .stat-card.not-started {
+            border-left: 4px solid #64748b;
+        }
+        .stat-card.not-started .stat-number {
+            color: #64748b;
+        }
+        .stat-card.in-progress {
+            border-left: 4px solid #f59e0b;
+        }
+        .stat-card.in-progress .stat-number {
+            color: #f59e0b;
+        }
+        .stat-card.completed {
+            border-left: 4px solid #10b981;
+        }
+        .stat-card.completed .stat-number {
+            color: #10b981;
+        }
+        .stat-card.cancelled {
+            border-left: 4px solid #ef4444;
+        }
+        .stat-card.cancelled .stat-number {
+            color: #ef4444;
+        }
+        .todo-filters {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+        .filter-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            background: white;
+            color: #64748b;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+        .filter-btn:hover {
+            background: #f8fafc;
+            border-color: #2563eb;
+            color: #2563eb;
+            text-decoration: none;
+        }
+        .filter-btn.active {
+            background: #2563eb;
+            color: white;
+            border-color: #2563eb;
+            font-weight: 600;
+        }
+        .todo-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .todo-item {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            border: 1px solid #e5e7eb;
+            position: relative;
+            transition: box-shadow 0.2s, transform 0.2s;
+        }
+        .todo-item:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transform: translateY(-1px);
+        }
+        
+        /* 主要内容区域 */
+        .todo-main-content {
+            margin-bottom: 1.2rem;
+        }
+        .todo-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 0.8rem;
+            line-height: 1.4;
+        }
+        
+        /* 标签区域 */
+        .todo-tags {
+            display: flex;
+            gap: 0.6rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        /* 象限标签 - 与编辑页面保持一致的颜色 */
+        .todo-quadrant {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            border-radius: 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            border: none;
+        }
+        .quadrant-important-urgent {
+            background: #fef2f2 !important;
+            color: #dc2626 !important;
+        }
+        .quadrant-important-not-urgent {
+            background: #f0fdf4 !important;
+            color: #059669 !important;
+        }
+        .quadrant-not-important-urgent {
+            background: #fef3c7 !important;
+            color: #d97706 !important;
+        }
+        .quadrant-not-important-not-urgent {
+            background: #f1f5f9 !important;
+            color: #64748b !important;
+        }
+        
+        /* 状态标签 - 与编辑页面保持一致的颜色 */
+        .todo-status {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            border-radius: 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            border: none;
+        }
+        .status-not-started {
+            background: #f1f5f9 !important;
+            color: #64748b !important;
+        }
+        .status-in-progress {
+            background: #dbeafe !important;
+            color: #2563eb !important;
+        }
+        .status-completed {
+            background: #dcfce7 !important;
+            color: #059669 !important;
+        }
+        .status-cancelled {
+            background: #fee2e2 !important;
+            color: #dc2626 !important;
+        }
+        
+        /* 时间信息区域 */
+        .todo-time-section {
+            background: #f8fafc;
+            border-radius: 0.6rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        .time-section-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        .todo-times {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 0.8rem;
+        }
+        .time-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+        }
+        .time-label {
+            font-size: 0.75rem;
+            color: #6b7280;
+            font-weight: 500;
+        }
+        .time-value {
+            font-size: 0.85rem;
+            color: #374151;
+            font-weight: 500;
+        }
+        
+        /* 备注信息区域 */
+        .todo-notes-section {
+            margin-bottom: 1rem;
+        }
+        .notes-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        .todo-notes {
+            background: #fef3c7;
+            border: 1px solid #fed7aa;
+            border-radius: 0.5rem;
+            padding: 0.8rem;
+            font-size: 0.85rem;
+            color: #92400e;
+            line-height: 1.4;
+        }
+        .todo-notes.cancelled {
+            background: #fee2e2;
+            border-color: #fecaca;
+            color: #991b1b;
+        }
+        
+        /* 操作按钮区域 */
+        .todo-actions {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: flex-end;
+            padding-top: 1rem;
+            border-top: 1px solid #f1f5f9;
+        }
+        .btn-sm {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
+            border-radius: 0.4rem;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #64748b;
+        }
+        .empty-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        .empty-state h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .empty-state p {
+            font-size: 0.95rem;
+            margin-bottom: 1.5rem;
+        }
+        @media (max-width: 768px) {
+            .todo-header {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: stretch;
+            }
+            .todo-header-row {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .todo-times {
+                grid-template-columns: 1fr;
+            }
+            .todo-actions {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="card-common">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="page-title">待做清单</div>
+        <div>
+            <a class="btn btn-primary me-2" href="{{ url_for('main.add_todo') }}">添加任务</a>
+            <a class="btn btn-outline-primary" href="{{ url_for('main.home') }}">返回首页</a>
+        </div>
+    </div>
+    <hr>
+
+    <div class="stats-cards">
+        <div class="stat-card total">
+            <div class="stat-number">{{ stats.total }}</div>
+            <div class="stat-label">总任务数</div>
+        </div>
+        <div class="stat-card not-started">
+            <div class="stat-number">{{ stats.not_started }}</div>
+            <div class="stat-label">未开始</div>
+        </div>
+        <div class="stat-card in-progress">
+            <div class="stat-number">{{ stats.in_progress }}</div>
+            <div class="stat-label">进行中</div>
+        </div>
+        <div class="stat-card completed">
+            <div class="stat-number">{{ stats.completed }}</div>
+            <div class="stat-label">已完成</div>
+        </div>
+        <div class="stat-card cancelled">
+            <div class="stat-number">{{ stats.cancelled }}</div>
+            <div class="stat-label">已取消</div>
+        </div>
+    </div>
+
+    <div class="todo-filters">
+        <a href="{{ url_for('main.todos') }}" class="filter-btn {% if not current_filter %}active{% endif %}">全部</a>
+        <a href="{{ url_for('main.todos') }}?status=未开始" class="filter-btn {% if current_filter == '未开始' %}active{% endif %}">未开始</a>
+        <a href="{{ url_for('main.todos') }}?status=进行中" class="filter-btn {% if current_filter == '进行中' %}active{% endif %}">进行中</a>
+        <a href="{{ url_for('main.todos') }}?status=已完成" class="filter-btn {% if current_filter == '已完成' %}active{% endif %}">已完成</a>
+        <a href="{{ url_for('main.todos') }}?status=取消" class="filter-btn {% if current_filter == '取消' %}active{% endif %}">已取消</a>
+    </div>
+    
+    {% if current_filter %}
+    <div class="filter-info mb-3">
+        <small class="text-muted">
+            📋 当前显示：<strong>{{ current_filter }}</strong> 状态的任务 (共 {{ todos|length }} 个)
+        </small>
+    </div>
+    {% endif %}
+
+    <div class="todo-list">
+        {% if todos %}
+            {% for todo in todos %}
+            <div class="todo-item">
+                <!-- 主要内容区域 -->
+                <div class="todo-main-content">
+                    <div class="todo-title">{{ todo.content }}</div>
+                    <div class="todo-tags">
+                        <span class="todo-quadrant quadrant-{% if todo.quadrant == '重要紧急' %}important-urgent{% elif todo.quadrant == '重要不紧急' %}important-not-urgent{% elif todo.quadrant == '不重要紧急' %}not-important-urgent{% elif todo.quadrant == '不重要不紧急' %}not-important-not-urgent{% endif %}">
+                            {{ todo.quadrant }}
+                        </span>
+                        <span class="todo-status status-{% if todo.status == '未开始' %}not-started{% elif todo.status == '进行中' %}in-progress{% elif todo.status == '已完成' %}completed{% elif todo.status == '取消' %}cancelled{% endif %}">
+                            {{ todo.status }}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- 时间信息区域 -->
+                {% if todo.planned_start or todo.planned_end or todo.actual_start or todo.actual_end %}
+                <div class="todo-time-section">
+                    <div class="time-section-title">
+                        ⏰ 时间安排
+                    </div>
+                    <div class="todo-times">
+                        {% if todo.planned_start %}
+                        <div class="time-item">
+                            <span class="time-label">计划开始</span>
+                            <span class="time-value">{{ todo.planned_start }}</span>
+                        </div>
+                        {% endif %}
+                        {% if todo.planned_end %}
+                        <div class="time-item">
+                            <span class="time-label">计划结束</span>
+                            <span class="time-value">{{ todo.planned_end }}</span>
+                        </div>
+                        {% endif %}
+                        {% if todo.actual_start %}
+                        <div class="time-item">
+                            <span class="time-label">实际开始</span>
+                            <span class="time-value">{{ todo.actual_start }}</span>
+                        </div>
+                        {% endif %}
+                        {% if todo.actual_end %}
+                        <div class="time-item">
+                            <span class="time-label">实际结束</span>
+                            <span class="time-value">{{ todo.actual_end }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- 备注信息区域 -->
+                {% if todo.completion_note %}
+                <div class="todo-notes-section">
+                    <div class="notes-title">
+                        ✅ 完成说明
+                    </div>
+                    <div class="todo-notes">
+                        {{ todo.completion_note }}
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if todo.cancel_reason %}
+                <div class="todo-notes-section">
+                    <div class="notes-title">
+                        ❌ 取消原因
+                    </div>
+                    <div class="todo-notes cancelled">
+                        {{ todo.cancel_reason }}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- 操作按钮区域 -->
+                <div class="todo-actions">
+                    {% if todo.status == '未开始' %}
+                        <!-- 未开始状态：可以编辑基本信息和开始执行 -->
+                        <a href="{{ url_for('main.edit_todo', todo_id=todo.id) }}" class="btn btn-outline-primary btn-sm">编辑任务</a>
+                        <a href="{{ url_for('main.update_todo_status', todo_id=todo.id, status='进行中') }}" class="btn btn-outline-success btn-sm">开始执行</a>
+                        <a href="{{ url_for('main.update_todo_status', todo_id=todo.id, status='取消') }}" class="btn btn-outline-warning btn-sm">取消任务</a>
+                    {% elif todo.status == '进行中' %}
+                        <!-- 进行中状态：只能标记完成或取消 -->
+                        <a href="{{ url_for('main.update_todo_status', todo_id=todo.id, status='已完成') }}" class="btn btn-outline-success btn-sm">标记完成</a>
+                        <a href="{{ url_for('main.update_todo_status', todo_id=todo.id, status='取消') }}" class="btn btn-outline-warning btn-sm">取消任务</a>
+                    {% elif todo.status == '已完成' %}
+                        <!-- 已完成状态：只能添加完成说明 -->
+                        <a href="{{ url_for('main.complete_todo', todo_id=todo.id) }}" class="btn btn-outline-info btn-sm">添加完成说明</a>
+                    {% elif todo.status == '取消' %}
+                        <!-- 已取消状态：只能添加取消说明 -->
+                        <a href="{{ url_for('main.cancel_todo', todo_id=todo.id) }}" class="btn btn-outline-info btn-sm">添加取消说明</a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">📋</div>
+                <h3>暂无待做任务</h3>
+                <p>开始添加您的第一个任务吧！</p>
+                <a href="{{ url_for('main.add_todo') }}" class="btn btn-primary">添加任务</a>
+            </div>
+        {% endif %}
+    </div>
+
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 

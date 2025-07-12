@@ -16,13 +16,7 @@
             box-shadow: 0 4px 32px 0 rgba(0, 0, 0, 0.10);
             border: none;
         }
-        .history-title {
-            font-weight: 800;
-            letter-spacing: 1px;
-            font-size: 1.35rem;
-            color: #222b45;
-            margin-bottom: 0;
-        }
+
         .record-card {
             background: #f9fafb;
             border-radius: 1.2rem;
@@ -107,7 +101,7 @@
 <body>
 <div class="history-card">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <div class="history-title">日记记录</div>
+        <div class="page-title">日记记录</div>
         <div>
             <a class="btn btn-primary me-2" href="{{ url_for('main.diary') }}">写今日日记</a>
             <a class="btn btn-outline-primary" href="{{ url_for('main.home') }}">返回首页</a>
