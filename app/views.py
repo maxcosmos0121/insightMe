@@ -26,18 +26,18 @@ def register():
         confirm_password = request.form.get('confirm_password', '').strip()
         
         if not username or not password or not confirm_password:
-            return render_template('register.html', error='所有字段都必须填写')
+            return render_template('auth/register.html', error='所有字段都必须填写')
         
         if password != confirm_password:
-            return render_template('register.html', error='两次输入的密码不一致')
+            return render_template('auth/register.html', error='两次输入的密码不一致')
         
         success, message = user_auth.register_user(username, password)
         if success:
             return redirect(url_for('main.login', registered='true'))
         else:
-            return render_template('register.html', error=message)
+            return render_template('auth/register.html', error=message)
     
-    return render_template('register.html')
+    return render_template('auth/register.html')
 
 
 @main_bp.route('/login', methods=['GET', 'POST'])
@@ -47,14 +47,14 @@ def login():
         password = request.form.get('password', '').strip()
         
         if not username or not password:
-            return render_template('login.html', error='用户名和密码不能为空')
+            return render_template('auth/login.html', error='用户名和密码不能为空')
         
         success, message = user_auth.verify_user(username, password)
         if success:
             session['username'] = username
             return redirect(url_for('main.home'))
         else:
-            return render_template('login.html', error=message)
+            return render_template('auth/login.html', error=message)
     
     # 检查是否是从注册页面跳转过来的
     registered = request.args.get('registered')
@@ -62,7 +62,7 @@ def login():
     if registered == 'true':
         success_message = '注册成功！请使用您的用户名和密码登录。'
     
-    return render_template('login.html', success=success_message)
+    return render_template('auth/login.html', success=success_message)
 
 
 @main_bp.route('/')
@@ -79,7 +79,7 @@ def home():
         'todo_stats': diary_db.get_todo_stats() if diary_db else {'total': 0, 'not_started': 0, 'in_progress': 0, 'completed': 0, 'cancelled': 0},
         'checkin_stats': diary_db.get_checkin_stats() if diary_db else {'total_items': 0, 'today_checked': 0, 'total_records_today': 0, 'streak': 0}
     }
-    return render_template('home.html', user=user)
+    return render_template('common/home.html', user=user)
 
 
 @main_bp.route('/diary', methods=['GET', 'POST'])
@@ -90,11 +90,11 @@ def diary():
     questions = diary_db.get_questions()
     if request.method == 'POST':
         if diary_db.has_today_record():
-            return render_template('diary.html', today=today, questions=questions, error='今天已经写过日记了')
+            return render_template('diary/diary.html', today=today, questions=questions, error='今天已经写过日记了')
         record = {key: request.form.get(key, '') for key, _ in questions}
         diary_db.add_record(record)
         return redirect(url_for('main.history'))
-    return render_template('diary.html', today=today, questions=questions)
+    return render_template('diary/diary.html', today=today, questions=questions)
 
 
 @main_bp.route('/history')
@@ -102,7 +102,7 @@ def history():
     if 'username' not in session:
         return redirect(url_for('main.login'))
     records = diary_db.get_all_records()
-    return render_template('history.html', records=records)
+    return render_template('common/history.html', records=records)
 
 
 @main_bp.route('/profile', methods=['GET', 'POST'])
@@ -124,10 +124,10 @@ def profile():
         diary_db.save_profile(data)
         message = '保存成功！'
         profile = diary_db.get_profile()
-        return render_template('profile.html', profile=profile, message=message)
+        return render_template('auth/profile.html', profile=profile, message=message)
     else:
         profile = diary_db.get_profile()
-        return render_template('profile.html', profile=profile)
+        return render_template('auth/profile.html', profile=profile)
 
 
 @main_bp.route('/logout')
@@ -152,7 +152,7 @@ def todos():
         todos = all_todos
     
     stats = diary_db.get_todo_stats()
-    return render_template('todos.html', todos=todos, stats=stats, current_filter=status_filter)
+    return render_template('todo/todos.html', todos=todos, stats=stats, current_filter=status_filter)
 
 
 @main_bp.route('/todos/add', methods=['GET', 'POST'])
@@ -178,7 +178,7 @@ def add_todo():
         diary_db.add_todo(data)
         return redirect(url_for('main.todos'))
     
-    return render_template('add_todo.html')
+    return render_template('todo/add_todo.html')
 
 
 @main_bp.route('/todos/edit/<int:todo_id>', methods=['GET', 'POST'])
@@ -208,7 +208,7 @@ def edit_todo(todo_id):
     if not todo:
         return redirect(url_for('main.todos'))
     
-    return render_template('edit_todo.html', todo=todo)
+    return render_template('todo/edit_todo.html', todo=todo)
 
 
 @main_bp.route('/todos/delete/<int:todo_id>')
@@ -258,7 +258,7 @@ def complete_todo(todo_id):
     if not todo:
         return redirect(url_for('main.todos'))
     
-    return render_template('complete_todo.html', todo=todo)
+    return render_template('todo/complete_todo.html', todo=todo)
 
 
 @main_bp.route('/todos/cancel/<int:todo_id>', methods=['GET', 'POST'])
@@ -280,7 +280,7 @@ def cancel_todo(todo_id):
     if not todo:
         return redirect(url_for('main.todos'))
     
-    return render_template('cancel_todo.html', todo=todo)
+    return render_template('todo/cancel_todo.html', todo=todo)
 
 # 打卡相关路由
 @main_bp.route('/checkin')
@@ -290,7 +290,7 @@ def checkin():
     
     items = diary_db.get_all_checkin_items()
     stats = diary_db.get_checkin_stats()
-    return render_template('checkin.html', items=items, stats=stats)
+    return render_template('checkin/checkin.html', items=items, stats=stats)
 
 
 @main_bp.route('/checkin/create', methods=['GET', 'POST'])
@@ -315,7 +315,7 @@ def create_checkin_item():
         diary_db.add_checkin_item(data)
         return redirect(url_for('main.checkin'))
     
-    return render_template('create_checkin_item.html')
+    return render_template('checkin/create_checkin_item.html')
 
 
 @main_bp.route('/checkin/edit/<int:item_id>', methods=['GET', 'POST'])
@@ -344,7 +344,7 @@ def edit_checkin_item(item_id):
         diary_db.update_checkin_item(item_id, data)
         return redirect(url_for('main.checkin'))
     
-    return render_template('edit_checkin_item.html', item=item)
+    return render_template('checkin/edit_checkin_item.html', item=item)
 
 
 @main_bp.route('/checkin/delete/<int:item_id>')
@@ -370,13 +370,13 @@ def do_checkin(item_id):
             return redirect(url_for('main.checkin'))
         else:
             item = diary_db.get_checkin_item_by_id(item_id)
-            return render_template('do_checkin.html', item=item, error=message)
+            return render_template('checkin/do_checkin.html', item=item, error=message)
     
     item = diary_db.get_checkin_item_by_id(item_id)
     if not item:
         return redirect(url_for('main.checkin'))
     
-    return render_template('do_checkin.html', item=item)
+    return render_template('checkin/do_checkin.html', item=item)
 
 
 @main_bp.route('/checkin/history')
@@ -409,4 +409,4 @@ def checkin_history():
         'month_records': month_records
     }
     
-    return render_template('checkin_history.html', items=items, records=records, selected_item_id=item_id, days=days, stats=stats)
+    return render_template('checkin/checkin_history.html', items=items, records=records, selected_item_id=item_id, days=days, stats=stats)
