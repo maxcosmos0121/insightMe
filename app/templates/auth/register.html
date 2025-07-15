@@ -1,300 +1,169 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <title>注册 - InsightMe</title>
-    <meta content="width=device-width, initial-scale=1" name="viewport">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body {
-            background: linear-gradient(120deg, #f6fafd 0%, #e9f0fb 100%);
-            min-height: 100vh;
-        }
-        .register-card {
-            max-width: 450px;
-            margin: 60px auto;
-            padding: 2.5rem 2rem 2rem 2rem;
-            background: #fff;
-            border-radius: 1.5rem;
-            box-shadow: 0 4px 32px 0 rgba(0, 0, 0, 0.10);
-            border: none;
-            animation: fadeInUp 0.6s ease-out;
-        }
-        .register-title {
-            font-weight: 800;
-            letter-spacing: 1px;
-            font-size: 2rem;
-            color: #222b45;
-            margin-bottom: 2rem;
-        }
-
-        .form-label {
-            color: #555;
-            font-weight: 500;
-        }
-
-        .form-control {
-            border-radius: 0.8rem !important;
-            border: 1.5px solid #e5e7eb;
-            background: #f8fafc;
-            transition: all 0.3s ease;
-            box-shadow: none;
-        }
-
-        .form-control:focus {
-            border-color: #3b82f6;
-            background: #fff;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
-        }
-
-        .form-control.is-invalid {
-            border-color: #dc3545;
-            background: #fff5f5;
-        }
-
-        .form-control.is-valid {
-            border-color: #198754;
-            background: #f8fff9;
-        }
-
-        .btn-primary {
-            border-radius: 0.8rem;
-            font-weight: 600;
-            padding: 0.75rem 1.5rem;
-        }
-
-        .alert {
-            border-radius: 0.8rem;
-            border: none;
-        }
-
-        .alert-danger {
-            background: #fee2e2;
-            color: #b91c1c;
-        }
-
-        .alert-success {
-            background: #dcfce7;
-            color: #166534;
-        }
-
-        .login-link {
-            text-align: center;
-            margin-top: 1.5rem;
-            color: #6b7280;
-        }
-
-        .login-link a {
-            color: #3b82f6;
-            text-decoration: none;
-            font-weight: 500;
-        }
-
-        .login-link a:hover {
-            text-decoration: underline;
-        }
-        
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        .password-strength {
-            margin-top: 0.5rem;
-            font-size: 0.875rem;
-        }
-        
-        .strength-weak { color: #dc3545; }
-        .strength-medium { color: #fd7e14; }
-        .strength-strong { color: #198754; }
-    </style>
-</head>
-<body>
-<div class="register-card">
-    <div class="register-title text-center">InsightMe 注册</div>
-    
-    {% if error %}
-    <div class="alert alert-danger py-2" id="error-alert">{{ error }}</div>
-    {% endif %}
-    
-    {% if success %}
-    <div class="alert alert-success py-2" id="success-alert">{{ success }}</div>
-    {% endif %}
-    
-    <form method="post" id="register-form">
-        <div class="mb-3">
-            <label class="form-label">用户名</label>
-            <input autofocus class="form-control" name="username" required type="text" 
-                   placeholder="至少3个字符" minlength="3" id="username">
-            <div class="invalid-feedback" id="username-feedback"></div>
-        </div>
-        
-        <div class="mb-3">
-            <label class="form-label">密码</label>
-            <input class="form-control" name="password" required type="password" 
-                   placeholder="至少6个字符" minlength="6" id="password">
-            <div class="password-strength" id="password-strength"></div>
-            <div class="invalid-feedback" id="password-feedback"></div>
-        </div>
-        
-        <div class="mb-4">
-            <label class="form-label">确认密码</label>
-            <input class="form-control" name="confirm_password" required type="password" 
-                   placeholder="再次输入密码" id="confirm-password">
-            <div class="invalid-feedback" id="confirm-password-feedback"></div>
-        </div>
-        
-        <button class="btn btn-primary w-100" type="submit" id="register-btn">注册</button>
-    </form>
-    
-    <div class="login-link">
-        已有账号？<a href="{{ url_for('main.login') }}">立即登录</a>
+{% extends 'auth/base.html' %}
+{% block title %}注册{% endblock %}
+{% block page_title %}注 册{% endblock %}
+{% block form %}
+<form method="post" id="register-form">
+    <div class="mb-3">
+        <label class="form-label">用户名</label>
+        <input autofocus class="form-control" name="username" required type="text"
+               placeholder="至少3个字符" minlength="3" id="username">
+        <div class="invalid-feedback" id="username-feedback"></div>
     </div>
-</div>
-
-<!-- jQuery 3.7.1 -->
-<script src="{{ url_for('static', filename='js/jquery-3.7.1.min.js') }}"></script>
-<!-- Bootstrap JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-<script>
-$(document).ready(function() {
-    // 表单验证
-    $('#register-form').on('submit', function(e) {
-        var isValid = true;
-        var username = $('#username').val().trim();
-        var password = $('#password').val();
-        var confirmPassword = $('#confirm-password').val();
-        
-        // 清除之前的验证状态
-        $('.form-control').removeClass('is-invalid is-valid');
-        $('.invalid-feedback').hide();
-        
-        // 用户名验证
-        if (username.length < 3) {
-            $('#username').addClass('is-invalid');
-            $('#username-feedback').text('用户名至少需要3个字符').show();
-            isValid = false;
-        } else {
-            $('#username').addClass('is-valid');
-        }
-        
-        // 密码验证
-        if (password.length < 6) {
-            $('#password').addClass('is-invalid');
-            $('#password-feedback').text('密码至少需要6个字符').show();
-            isValid = false;
-        } else {
-            $('#password').addClass('is-valid');
-        }
-        
-        // 确认密码验证
-        if (password !== confirmPassword) {
-            $('#confirm-password').addClass('is-invalid');
-            $('#confirm-password-feedback').text('两次输入的密码不一致').show();
-            isValid = false;
-        } else if (confirmPassword) {
-            $('#confirm-password').addClass('is-valid');
-        }
-        
-        if (!isValid) {
-            e.preventDefault();
-            return false;
-        }
-        
-        // 显示加载状态
-        $('#register-btn').prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>注册中...');
-    });
-    
-    // 实时密码强度检测
-    $('#password').on('input', function() {
-        var password = $(this).val();
-        var strength = checkPasswordStrength(password);
-        var strengthText = '';
-        var strengthClass = '';
-        
-        if (password.length === 0) {
-            $('#password-strength').text('').removeClass('strength-weak strength-medium strength-strong');
-            return;
-        }
-        
-        switch(strength) {
-            case 'weak':
-                strengthText = '密码强度：弱';
-                strengthClass = 'strength-weak';
-                break;
-            case 'medium':
-                strengthText = '密码强度：中等';
-                strengthClass = 'strength-medium';
-                break;
-            case 'strong':
-                strengthText = '密码强度：强';
-                strengthClass = 'strength-strong';
-                break;
-        }
-        
-        $('#password-strength').text(strengthText).removeClass('strength-weak strength-medium strength-strong').addClass(strengthClass);
-    });
-    
-    // 密码强度检测函数
-    function checkPasswordStrength(password) {
-        var score = 0;
-        
-        if (password.length >= 6) score++;
-        if (password.length >= 8) score++;
-        if (/[a-z]/.test(password)) score++;
-        if (/[A-Z]/.test(password)) score++;
-        if (/[0-9]/.test(password)) score++;
-        if (/[^A-Za-z0-9]/.test(password)) score++;
-        
-        if (score <= 2) return 'weak';
-        if (score <= 4) return 'medium';
-        return 'strong';
+    <div class="mb-3">
+        <label class="form-label">密码</label>
+        <input class="form-control" name="password" required type="password"
+               placeholder="至少6个字符" minlength="6" id="password">
+        <div class="password-strength" id="password-strength"></div>
+        <div class="invalid-feedback" id="password-feedback"></div>
+    </div>
+    <div class="mb-4">
+        <label class="form-label">确认密码</label>
+        <input class="form-control" name="confirm_password" required type="password"
+               placeholder="再次输入密码" id="confirm-password">
+        <div class="invalid-feedback" id="confirm-password-feedback"></div>
+    </div>
+    <button class="btn btn-primary w-100" type="submit" id="register-btn">注册</button>
+</form>
+{% endblock %}
+{% block link %}
+已有账号？<a href="{{ url_for('main.login') }}">立即登录</a>
+{% endblock %}
+{% block extra_css %}
+<style>
+    .password-strength {
+        margin-top: 0.5rem;
+        font-size: 0.875rem;
     }
-    
-    // 实时确认密码验证
-    $('#confirm-password').on('input', function() {
-        var password = $('#password').val();
-        var confirmPassword = $(this).val();
-        
-        if (confirmPassword.length === 0) {
-            $(this).removeClass('is-invalid is-valid');
-            return;
+</style>
+{% endblock %}
+{% block extra_js %}
+<script>
+    $(function () {
+        const $form = $('#register-form');
+        const $btn = $('#register-btn');
+        const $username = $('#username');
+        const $password = $('#password');
+        const $confirmPassword = $('#confirm-password');
+        const $formControls = $('.form-control');
+
+        // 表单提交处理
+        $form.on('submit', function (e) {
+            let isValid = true;
+            const username = $username.val().trim();
+            const password = $password.val();
+            const confirmPassword = $confirmPassword.val();
+
+            // 清除状态
+            $formControls.removeClass('is-invalid is-valid');
+            $('.invalid-feedback').hide();
+
+            // 用户名验证
+            if (username.length < 3) {
+                showInvalid($username, '用户名至少需要3个字符');
+                isValid = false;
+            } else {
+                $username.addClass('is-valid');
+            }
+
+            // 密码验证
+            if (password.length < 6) {
+                showInvalid($password, '密码至少需要6个字符');
+                isValid = false;
+            } else {
+                $password.addClass('is-valid');
+            }
+
+            // 确认密码验证
+            if (confirmPassword !== password) {
+                showInvalid($confirmPassword, '两次输入的密码不一致');
+                isValid = false;
+            } else if (confirmPassword) {
+                $confirmPassword.addClass('is-valid');
+            }
+
+            if (!isValid) {
+                e.preventDefault();
+                return false;
+            }
+
+            // 显示加载状态
+            $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>注册中...');
+        });
+
+        // 密码强度检测
+        $password.on('input', function () {
+            const pwd = $(this).val();
+            const strength = getPasswordStrength(pwd);
+            const $indicator = $('#password-strength');
+
+            if (!pwd) {
+                $indicator.text('').removeClass('strength-weak strength-medium strength-strong');
+                return;
+            }
+
+            const strengthMap = {
+                weak: {text: '密码强度：弱', class: 'strength-weak'},
+                medium: {text: '密码强度：中等', class: 'strength-medium'},
+                strong: {text: '密码强度：强', class: 'strength-strong'}
+            };
+
+            $indicator
+                .text(strengthMap[strength].text)
+                .removeClass('strength-weak strength-medium strength-strong')
+                .addClass(strengthMap[strength].class);
+        });
+
+        // 实时确认密码验证
+        $confirmPassword.on('input', function () {
+            const pwd = $password.val();
+            const confirmPwd = $(this).val();
+
+            $(this).removeClass('is-valid is-invalid');
+            if (!confirmPwd) return;
+
+            if (pwd === confirmPwd) {
+                $(this).addClass('is-valid');
+            } else {
+                $(this).addClass('is-invalid');
+            }
+        });
+
+        // 输入框焦点效果
+        $formControls.on('focus blur', function (e) {
+            $(this).parent().toggleClass('focused', e.type === 'focus');
+        });
+
+        // 自动隐藏提示
+        setTimeout(() => $('.alert').fadeOut(500), 5000);
+
+        // 回车提交表单
+        $formControls.on('keypress', function (e) {
+            if (e.which === 13) {
+                $form.submit();
+            }
+        });
+
+        // 显示无效输入提示
+        function showInvalid($input, message) {
+            const feedbackId = $input.attr('id') + '-feedback';
+            $input.addClass('is-invalid');
+            $('#' + feedbackId).text(message).show();
         }
-        
-        if (password === confirmPassword) {
-            $(this).removeClass('is-invalid').addClass('is-valid');
-        } else {
-            $(this).removeClass('is-valid').addClass('is-invalid');
+
+        // 密码强度检测函数
+        function getPasswordStrength(password) {
+            let score = 0;
+            if (password.length >= 6) score++;
+            if (password.length >= 8) score++;
+            if (/[a-z]/.test(password)) score++;
+            if (/[A-Z]/.test(password)) score++;
+            if (/\d/.test(password)) score++;
+            if (/[^A-Za-z0-9]/.test(password)) score++;
+
+            if (score <= 2) return 'weak';
+            if (score <= 4) return 'medium';
+            return 'strong';
         }
     });
-    
-    // 输入框焦点效果
-    $('.form-control').on('focus', function() {
-        $(this).parent().addClass('focused');
-    }).on('blur', function() {
-        $(this).parent().removeClass('focused');
-    });
-    
-    // 自动隐藏提示信息
-    setTimeout(function() {
-        $('.alert').fadeOut(500);
-    }, 5000);
-    
-    // 回车键提交表单
-    $('.form-control').on('keypress', function(e) {
-        if (e.which === 13) {
-            $('#register-form').submit();
-        }
-    });
-});
 </script>
-</body>
-</html> 
+{% endblock %}
