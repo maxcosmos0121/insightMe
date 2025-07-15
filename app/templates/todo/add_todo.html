@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>添加任务 - InsightMe</title>
+    <title>添加计划 - InsightMe</title>
     <meta content="width=device-width, initial-scale=1" name="viewport">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/common.css') }}" rel="stylesheet">
@@ -82,12 +82,12 @@
             box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.25);
             transform: translateY(-1px);
         }
-        
+
         .form-control.is-invalid {
             border-color: #dc3545;
             background: #fff5f5;
         }
-        
+
         .form-control.is-valid {
             border-color: #198754;
             background: #f8fff9;
@@ -108,7 +108,7 @@
 <body>
 <div class="card-common">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <div class="page-title">添加任务</div>
+        <div class="page-title">添加计划</div>
         <div>
             <a class="btn btn-outline-primary" href="{{ url_for('main.todos') }}">返回列表</a>
         </div>
@@ -119,17 +119,17 @@
         <form method="POST" id="add-todo-form">
             <div class="form-section">
                 <div class="section-title">
-                    任务内容
+                    计划内容
                 </div>
                 <div class="mb-3">
-                    <textarea class="form-control" id="content" name="content" rows="3" placeholder="请描述您要完成的任务..." required></textarea>
+                    <textarea class="form-control" id="content" name="content" rows="3" placeholder="请描述您要完成的计划..." required></textarea>
                     <div class="invalid-feedback" id="content-feedback"></div>
                 </div>
             </div>
 
             <div class="form-section">
                 <div class="section-title">
-                    任务象限
+                    象限
                 </div>
                 <div class="quadrant-grid">
                     <div class="quadrant-option" data-value="重要紧急">
@@ -189,7 +189,7 @@ $(document).ready(function() {
         $(this).addClass('selected');
         // 设置隐藏输入框的值
         $('#quadrant').val($(this).data('value'));
-        
+
         // 清除验证状态
         $('#quadrant').removeClass('is-invalid');
         $('#quadrant-feedback').hide();
@@ -200,43 +200,43 @@ $(document).ready(function() {
         var isValid = true;
         var content = $('#content').val().trim();
         var quadrant = $('#quadrant').val();
-        
+
         // 清除之前的验证状态
         $('.form-control').removeClass('is-invalid is-valid');
         $('.invalid-feedback').hide();
-        
-        // 验证任务内容
+
+        // 验证计划内容
         if (!content) {
             $('#content').addClass('is-invalid');
-            $('#content-feedback').text('请填写任务内容').show();
+            $('#content-feedback').text('请填写计划内容').show();
             isValid = false;
         } else {
             $('#content').addClass('is-valid');
         }
-        
+
         // 验证象限选择
         if (!quadrant) {
             $('#quadrant').addClass('is-invalid');
-            $('#quadrant-feedback').text('请选择任务象限分类').show();
+            $('#quadrant-feedback').text('请选择象限分类').show();
             isValid = false;
         } else {
             $('#quadrant').addClass('is-valid');
         }
-        
+
         if (!isValid) {
             e.preventDefault();
             return false;
         }
-        
+
         // 显示加载状态
         $('#submit-btn').prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>保存中...');
     });
-    
+
     // 时间验证
     $('#planned_end').on('change', function() {
         var startTime = $('#planned_start').val();
         var endTime = $(this).val();
-        
+
         if (startTime && endTime && startTime >= endTime) {
             $(this).addClass('is-invalid');
             $(this).next('.invalid-feedback').text('结束时间必须晚于开始时间').show();
@@ -245,14 +245,14 @@ $(document).ready(function() {
             $(this).next('.invalid-feedback').hide();
         }
     });
-    
+
     // 输入框焦点效果
     $('.form-control').on('focus', function() {
         $(this).parent().addClass('focused');
     }).on('blur', function() {
         $(this).parent().removeClass('focused');
     });
-    
+
     // 实时内容验证
     $('#content').on('input', function() {
         var content = $(this).val().trim();
@@ -263,7 +263,7 @@ $(document).ready(function() {
             $(this).removeClass('is-valid');
         }
     });
-    
+
     // 回车键提交表单
     $('.form-control').on('keypress', function(e) {
         if (e.which === 13) {
@@ -273,4 +273,4 @@ $(document).ready(function() {
 });
 </script>
 </body>
-</html> 
+</html>

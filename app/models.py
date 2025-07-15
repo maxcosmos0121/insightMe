@@ -37,8 +37,8 @@ class DiaryDB:
 
         class Todo(BaseModel):
             id = AutoField(primary_key=True)
-            content = TextField()  # 任务内容
-            quadrant = CharField()  # 任务象限分类：重要紧急、重要不紧急、不重要紧急、不重要不紧急
+            content = TextField()  # 计划内容
+            quadrant = CharField()  # 象限分类：重要紧急、重要不紧急、不重要紧急、不重要不紧急
             planned_start = DateTimeField(null=True)  # 计划开始时间
             planned_end = DateTimeField(null=True)  # 计划结束时间
             actual_start = DateTimeField(null=True)  # 实际开始时间
@@ -172,13 +172,13 @@ class DiaryDB:
                 setattr(profile, k, v)
             profile.save()
 
-    # 待做清单相关方法
+    # 计划清单相关方法
     def add_todo(self, data: dict):
-        """添加待做任务"""
+        """添加待做计划"""
         return self.Todo.create(**data)
 
     def get_all_todos(self) -> List[Dict]:
-        """获取所有待做任务"""
+        """获取所有待做计划"""
         query = self.Todo.select().order_by(self.Todo.created_at.desc())
         return [
             {
@@ -199,7 +199,7 @@ class DiaryDB:
         ]
 
     def get_todo_by_id(self, todo_id: int) -> Dict:
-        """根据ID获取待做任务"""
+        """根据ID获取待做计划"""
         todo = self.Todo.get_or_none(self.Todo.id == todo_id)
         if todo:
             return {
@@ -219,7 +219,7 @@ class DiaryDB:
         return None
 
     def update_todo(self, todo_id: int, data: dict):
-        """更新待做任务"""
+        """更新待做计划"""
         data['updated_at'] = datetime.now()
         todo = self.Todo.get_or_none(self.Todo.id == todo_id)
         if todo:
@@ -230,7 +230,7 @@ class DiaryDB:
         return False
 
     def delete_todo(self, todo_id: int):
-        """删除待做任务"""
+        """删除待做计划"""
         todo = self.Todo.get_or_none(self.Todo.id == todo_id)
         if todo:
             todo.delete_instance()
@@ -238,7 +238,7 @@ class DiaryDB:
         return False
 
     def get_todo_stats(self) -> Dict:
-        """获取待做任务统计"""
+        """获取待做计划统计"""
         total = self.Todo.select().count()
         not_started = self.Todo.select().where(self.Todo.status == '未开始').count()
         in_progress = self.Todo.select().where(self.Todo.status == '进行中').count()

@@ -205,6 +205,31 @@
             z-index: 1;
         }
 
+        .actions-list .action-link:nth-child(1) {
+            background: #e3f0ff;
+            color: #2563eb;
+        }
+        .actions-list .action-link:nth-child(2) {
+            background: #e8f5e9;
+            color: #059669;
+        }
+        .actions-list .action-link:nth-child(3) {
+            background: #fffbe6;
+            color: #b08900;
+        }
+        .actions-list .action-link:nth-child(4) {
+            background: #f3e8ff;
+            color: #7c3aed;
+        }
+        .actions-list .action-link:nth-child(5) {
+            background: #ffe4e6;
+            color: #db2777;
+        }
+        .actions-list .action-link:hover {
+            filter: brightness(0.97) contrast(1.1);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+        }
+
         @media (max-width: 768px) {
             .main-layout {
                 grid-template-columns: 1fr;
@@ -243,11 +268,11 @@
                     </div>
                     <div class="stat-item">
                         <div class="stat-number">{{ user.todo_stats.total or 0 }}</div>
-                        <div class="stat-label">待做任务</div>
+                        <div class="stat-label">待做计划</div>
                     </div>
                     <div class="stat-item">
                         <div class="stat-number">{{ user.todo_stats.completed or 0 }}</div>
-                        <div class="stat-label">已完成任务</div>
+                        <div class="stat-label">已完成计划</div>
                     </div>
                     <div class="stat-item">
                         <div class="stat-number">{{ user.checkin_stats.total_items or 0 }}</div>

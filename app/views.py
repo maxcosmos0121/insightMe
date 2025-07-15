@@ -135,7 +135,7 @@ def logout():
     session.pop('username', None)
     return redirect(url_for('main.login'))
 
-# 待做清单相关路由
+# 计划清单相关路由
 @main_bp.route('/todos')
 def todos():
     if 'username' not in session:
@@ -144,7 +144,7 @@ def todos():
     # 获取筛选参数
     status_filter = request.args.get('status', '')
 
-    # 获取所有任务并根据状态筛选
+    # 获取所有计划并根据状态筛选
     all_todos = diary_db.get_all_todos()
     if status_filter:
         todos = [todo for todo in all_todos if todo['status'] == status_filter]

@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>待做清单 - InsightMe</title>
+    <title>计划清单 - InsightMe</title>
     <meta content="width=device-width, initial-scale=1" name="viewport">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/common.css') }}" rel="stylesheet">
@@ -113,7 +113,7 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             transform: translateY(-1px);
         }
-        
+
         /* 主要内容区域 */
         .todo-main-content {
             margin-bottom: 1.2rem;
@@ -125,7 +125,7 @@
             margin-bottom: 0.8rem;
             line-height: 1.4;
         }
-        
+
         /* 标签区域 */
         .todo-tags {
             display: flex;
@@ -133,7 +133,7 @@
             margin-bottom: 1rem;
             flex-wrap: wrap;
         }
-        
+
         /* 象限标签 - 与编辑页面保持一致的颜色 */
         .todo-quadrant {
             display: inline-block;
@@ -159,7 +159,7 @@
             background: #f1f5f9 !important;
             color: #64748b !important;
         }
-        
+
         /* 状态标签 - 与编辑页面保持一致的颜色 */
         .todo-status {
             display: inline-block;
@@ -185,7 +185,7 @@
             background: #fee2e2 !important;
             color: #dc2626 !important;
         }
-        
+
         /* 时间信息区域 */
         .todo-time-section {
             background: #f8fafc;
@@ -222,7 +222,7 @@
             color: #374151;
             font-weight: 500;
         }
-        
+
         /* 备注信息区域 */
         .todo-notes-section {
             margin-bottom: 1rem;
@@ -250,7 +250,7 @@
             border-color: #fecaca;
             color: #991b1b;
         }
-        
+
         /* 操作按钮区域 */
         .todo-actions {
             display: flex;
@@ -303,9 +303,9 @@
 <body>
 <div class="card-common">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <div class="page-title">待做清单</div>
+        <div class="page-title">计划清单</div>
         <div>
-            <a class="btn btn-primary me-2" href="{{ url_for('main.add_todo') }}">添加任务</a>
+            <a class="btn btn-primary me-2" href="{{ url_for('main.add_todo') }}">添加计划</a>
             <a class="btn btn-outline-primary" href="{{ url_for('main.home') }}">返回首页</a>
         </div>
     </div>
@@ -314,7 +314,7 @@
     <div class="stats-cards">
         <div class="stat-card total">
             <div class="stat-number">{{ stats.total }}</div>
-            <div class="stat-label">总任务数</div>
+            <div class="stat-label">总计划数</div>
         </div>
         <div class="stat-card not-started">
             <div class="stat-number">{{ stats.not_started }}</div>
@@ -341,11 +341,11 @@
         <a href="{{ url_for('main.todos') }}?status=已完成" class="filter-btn {% if current_filter == '已完成' %}active{% endif %}">已完成</a>
         <a href="{{ url_for('main.todos') }}?status=取消" class="filter-btn {% if current_filter == '取消' %}active{% endif %}">已取消</a>
     </div>
-    
+
     {% if current_filter %}
     <div class="filter-info mb-3">
         <small class="text-muted">
-            📋 当前显示：<strong>{{ current_filter }}</strong> 状态的任务 (共 {{ todos|length }} 个)
+            📋 当前显示：<strong>{{ current_filter }}</strong> 状态的计划 (共 {{ todos|length }} 个)
         </small>
     </div>
     {% endif %}
@@ -429,13 +429,13 @@
                 <div class="todo-actions">
                     {% if todo.status == '未开始' %}
                         <!-- 未开始状态：可以编辑基本信息和开始执行 -->
-                        <a href="{{ url_for('main.edit_todo', todo_id=todo.id) }}" class="btn btn-outline-primary btn-sm">编辑任务</a>
+                        <a href="{{ url_for('main.edit_todo', todo_id=todo.id) }}" class="btn btn-outline-primary btn-sm">编辑计划</a>
                         <a href="{{ url_for('main.update_todo_status', todo_id=todo.id, status='进行中') }}" class="btn btn-outline-success btn-sm">开始执行</a>
-                        <a href="{{ url_for('main.update_todo_status', todo_id=todo.id, status='取消') }}" class="btn btn-outline-warning btn-sm">取消任务</a>
+                        <a href="{{ url_for('main.update_todo_status', todo_id=todo.id, status='取消') }}" class="btn btn-outline-warning btn-sm">取消计划</a>
                     {% elif todo.status == '进行中' %}
                         <!-- 进行中状态：只能标记完成或取消 -->
                         <a href="{{ url_for('main.update_todo_status', todo_id=todo.id, status='已完成') }}" class="btn btn-outline-success btn-sm">标记完成</a>
-                        <a href="{{ url_for('main.update_todo_status', todo_id=todo.id, status='取消') }}" class="btn btn-outline-warning btn-sm">取消任务</a>
+                        <a href="{{ url_for('main.update_todo_status', todo_id=todo.id, status='取消') }}" class="btn btn-outline-warning btn-sm">取消计划</a>
                     {% elif todo.status == '已完成' %}
                         <!-- 已完成状态：只能添加完成说明 -->
                         <a href="{{ url_for('main.complete_todo', todo_id=todo.id) }}" class="btn btn-outline-info btn-sm">添加完成说明</a>
@@ -449,9 +449,9 @@
         {% else %}
             <div class="empty-state">
                 <div class="empty-icon">📋</div>
-                <h3>暂无待做任务</h3>
-                <p>开始添加您的第一个任务吧！</p>
-                <a href="{{ url_for('main.add_todo') }}" class="btn btn-primary">添加任务</a>
+                <h3>暂无待做计划</h3>
+                <p>开始添加您的第一个计划吧！</p>
+                <a href="{{ url_for('main.add_todo') }}" class="btn btn-primary">添加计划</a>
             </div>
         {% endif %}
     </div>
@@ -461,4 +461,4 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
-</html> 
+</html>

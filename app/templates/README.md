@@ -24,11 +24,11 @@ app/
     │   ├── register.html          # 注册页面（使用jQuery）
     │   └── profile.html           # 个人资料页面
     ├── todo/
-    │   ├── todos.html             # 任务列表
-    │   ├── add_todo.html          # 添加任务（使用jQuery）
-    │   ├── edit_todo.html         # 编辑任务（使用jQuery）
-    │   ├── complete_todo.html     # 完成任务
-    │   └── cancel_todo.html       # 取消任务
+    │   ├── todos.html             # 计划列表
+    │   ├── add_todo.html          # 添加计划（使用jQuery）
+    │   ├── edit_todo.html         # 编辑计划（使用jQuery）
+    │   ├── complete_todo.html     # 完成计划
+    │   └── cancel_todo.html       # 取消计划
     ├── checkin/
     │   ├── checkin.html           # 打卡主页
     │   ├── do_checkin.html        # 执行打卡（使用jQuery）
@@ -149,9 +149,9 @@ $('.element').animate({
 - ✅ `login.html` - 登录页面
 - ✅ `register.html` - 注册页面
 
-#### 任务管理
-- ✅ `add_todo.html` - 添加任务
-- ✅ `edit_todo.html` - 编辑任务
+#### 计划管理
+- ✅ `add_todo.html` - 添加计划
+- ✅ `edit_todo.html` - 编辑计划
 
 #### 打卡功能
 - ✅ `do_checkin.html` - 执行打卡
