@@ -102,7 +102,7 @@ def history():
     if 'username' not in session:
         return redirect(url_for('main.login'))
     records = diary_db.get_all_records()
-    return render_template('common/history.html', records=records)
+    return render_template('diary/history.html', records=records)
 
 
 @main_bp.route('/profile', methods=['GET', 'POST'])

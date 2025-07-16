@@ -7,6 +7,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/common.css') }}" rel="stylesheet">
     <style>
+
         .history-card {
             max-width: 1200px;
             margin: 48px auto;
@@ -18,12 +19,12 @@
         }
 
         .record-card {
-            background: #f9fafb;
+            background: #f4f8fd;
             border-radius: 1.2rem;
             margin-bottom: 1.2rem;
             padding: 1.1rem 1.3rem 1rem 1.3rem;
-            box-shadow: 0 2px 10px 0 rgba(0, 0, 0, 0.05);
-            border: 1px solid #e5e7eb;
+            box-shadow: 0 2px 12px 0 rgba(80, 120, 200, 0.07);
+            border: 1px solid #e3eaf6;
             display: flex;
             flex-direction: column;
             gap: 0.7rem;
@@ -32,7 +33,7 @@
         .record-title {
             font-weight: 900;
             font-size: 1.18rem;
-            color: #1a1a1a;
+            color: #2563eb;
             margin-bottom: 0.1rem;
             letter-spacing: 0.5px;
         }
@@ -41,23 +42,23 @@
             font-weight: 600;
             color: #2d3748;
             background: #fff;
-            border-radius: 0.6rem;
+            border-radius: 0.8rem;
             padding: 0.6rem 0.9rem;
             box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.02);
-            border: 1px solid #f1f1f1;
+            border: 1px solid #e3eaf6;
             margin-bottom: 0.4rem;
             word-break: break-all;
             white-space: pre-line;
             min-height: 1.7em;
         }
         .record-long {
-            font-size: 0.99rem;
+            font-size: 1rem;
             color: #374151;
-            background: #fff;
-            border-radius: 0.6rem;
+            background: #f8fbff;
+            border-radius: 0.8rem;
             padding: 0.55rem 0.9rem;
             box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.01);
-            border: 1px solid #f1f1f1;
+            border: 1px solid #e3eaf6;
             margin-bottom: 0.4rem;
             word-break: break-all;
             white-space: pre-line;
@@ -71,13 +72,13 @@
             margin-bottom: 0.2rem;
         }
         .record-info-block {
-            min-width: 90px;
+            min-width: 110px;
             margin-bottom: 0;
         }
         .record-label {
-            color: #a0aec0;
-            font-size: 0.95em;
-            font-weight: 500;
+            color: #60a5fa;
+            font-size: 1em;
+            font-weight: 600;
             margin-right: 0.15em;
         }
         .record-content {
@@ -89,13 +90,41 @@
             color: #64748b !important;
         }
         .record-section-title {
-            font-size: 1.01rem;
+            font-size: 1.05rem;
             font-weight: 700;
             color: #2563eb;
             margin: 0.2rem 0 0.1rem 0;
             letter-spacing: 0.2px;
         }
-
+        @media (max-width: 768px) {
+            .history-card {
+                padding: 1.2rem 0.5rem 1rem 0.5rem;
+            }
+            .record-card {
+                padding: 0.8rem 0.5rem 0.7rem 0.5rem;
+            }
+        }
+        .history-list-container {
+            max-height: 700px;
+            overflow-y: auto;
+            padding-right: 8px;
+        }
+        .history-list-container::-webkit-scrollbar {
+            width: 6px;
+            background: #e9f0fb;
+            border-radius: 6px;
+        }
+        .history-list-container::-webkit-scrollbar-thumb {
+            background: #b4c5e4;
+            border-radius: 6px;
+        }
+        .history-list-container::-webkit-scrollbar-thumb:hover {
+            background: #8fa7d3;
+        }
+        .history-list-container::-webkit-scrollbar-track {
+            background: #e9f0fb;
+            border-radius: 6px;
+        }
     </style>
 </head>
 <body>
@@ -109,31 +138,36 @@
     </div>
     <hr>
     {% if records %}
+    <div class="history-list-container">
     {% for rec in records %}
     <div class="record-card">
         <div class="record-title">📅 {{ rec['date'] }}</div>
         <div class="record-info-group" style="margin-bottom: 0.7rem;">
             <div class="record-info-block">
-                <span class="record-label">💰 收入:</span>
-                <span class="record-content">{{ rec['income'] }}</span>
+                <span class="record-label">🌤 天气:</span>
+                <span class="record-content">{{ rec['weather'] }}</span>
             </div>
             <div class="record-info-block">
-                <span class="record-label">💸 支出:</span>
-                <span class="record-content">{{ rec['expense'] }}</span>
+                <span class="record-label">📍 位置:</span>
+                <span class="record-content">{{ rec['location'] }}</span>
             </div>
             <div class="record-info-block">
-                <span class="record-label">🙂 情绪评分:</span>
+                <span class="record-label">🙂 心情评分:</span>
                 <span class="record-content">{{ rec['mood'] }}</span>
             </div>
         </div>
         <div class="record-section-title">💬 做了什么</div>
         <div class="record-long">{{ rec['activities'] }}</div>
-        <div class="record-section-title">💭 想法</div>
-        <div class="record-long">{{ rec['thoughts'] }}</div>
+        <div class="record-section-title">📝 感受和反思</div>
+        <div class="record-long">{{ rec['reflection'] }}</div>
         <div class="record-section-title">📌 明日计划</div>
         <div class="record-long">{{ rec['plan'] }}</div>
+        <div class="record-section-title">🆕 写点别的</div>
+        <div class="record-long">{{ rec['other'] }}</div>
     </div>
+    
     {% endfor %}
+    </div>
     {% else %}
     <p class="text-center text-secondary">暂无日记记录。</p>
     {% endif %}

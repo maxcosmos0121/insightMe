@@ -40,7 +40,7 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div class="page-title">写日记 <span class="fs-5 text-secondary">({{ today }})</span></div>
         <div>
-            <a class="btn btn-outline-primary" href="{{ url_for('main.home') }}">返回首页</a>
+            <a class="btn btn-outline-primary" href="{{ url_for('main.history') }}">返回列表</a>
         </div>
     </div>
     <hr>
@@ -48,32 +48,59 @@
     <div class="alert alert-danger py-2">{{ error }}</div>
     {% endif %}
     <form method="post">
-        <div class="mb-3">
-            <label class="form-label">💬 做了什么</label>
-            <textarea class="form-control" name="activities" required></textarea>
+        <div class="row mb-3">
+            <div class="col-md-4 mb-2 mb-md-0">
+                <label class="form-label">🌤 天气</label>
+                <select class="form-select" name="weather" required>
+                    <option value="晴">晴</option>
+                    <option value="阴">阴</option>
+                    <option value="雨">雨</option>
+                    <option value="雪">雪</option>
+                    <option value="其他">其他</option>
+                </select>
+            </div>
+            <div class="col-md-4 mb-2 mb-md-0">
+                <label class="form-label">📍 位置</label>
+                <input class="form-control" name="location" type="text" placeholder="请输入所在位置" required>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">🙂 心情评分 <span class="text-secondary small">（0-10分）</span></label>
+                <div class="input-group" style="width:100%;">
+                    <button class="btn btn-outline-secondary" type="button" id="moodMinus" style="min-width:44px;max-width:60px;height:40px;border-radius:1rem 0 0 1rem !important;">-</button>
+                    <input type="number" class="form-control text-center" name="mood" id="moodInput" min="0" max="10" step="1" value="5" required style="height:40px;flex:1 1 auto;min-width:0;border-radius:0 !important;border:none;box-shadow:none;" onfocus="this.style.border='1px solid #000';this.style.boxShadow='none';" onblur="this.style.border='none';this.style.boxShadow='none';">
+                    <button class="btn btn-outline-secondary" type="button" id="moodPlus" style="min-width:44px;max-width:60px;height:40px;border-radius:0 1rem 1rem 0 !important;">+</button>
+                </div>
+            </div>
         </div>
         <div class="mb-3">
-            <label class="form-label">💰 收入</label>
-            <input class="form-control" name="income" required type="text">
+            <label class="form-label">💬 做了什么？</label>
+            <textarea class="form-control" name="activities" required rows="3"></textarea>
         </div>
         <div class="mb-3">
-            <label class="form-label">💸 支出</label>
-            <input class="form-control" name="expense" required type="text">
-        </div>
-        <div class="mb-3">
-            <label class="form-label">🙂 情绪评分</label>
-            <input class="form-control" name="mood" required type="text">
-        </div>
-        <div class="mb-3">
-            <label class="form-label">💭 想法</label>
-            <textarea class="form-control" name="thoughts" required></textarea>
+            <label class="form-label">📝 感受和反思</label>
+            <textarea class="form-control" name="reflection" required rows="3"></textarea>
         </div>
         <div class="mb-3">
             <label class="form-label">📌 明日计划</label>
-            <textarea class="form-control" name="plan" required></textarea>
+            <textarea class="form-control" name="plan" required rows="3"></textarea>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">🆕 写点别的</label>
+            <textarea class="form-control" name="other" required rows="3"></textarea>
         </div>
         <button class="btn btn-success w-100" type="submit">保存</button>
     </form>
 </div>
+<script>
+    const moodInput = document.getElementById('moodInput');
+    document.getElementById('moodMinus').onclick = function() {
+        let val = parseInt(moodInput.value) || 0;
+        if(val > 0) moodInput.value = val - 1;
+    };
+    document.getElementById('moodPlus').onclick = function() {
+        let val = parseInt(moodInput.value) || 0;
+        if(val < 10) moodInput.value = val + 1;
+    };
+</script>
 </body>
 </html>

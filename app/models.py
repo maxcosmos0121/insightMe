@@ -17,12 +17,13 @@ class DiaryDB:
 
         class Diary(BaseModel):
             date = DateField(primary_key=True)
-            activities = TextField()
-            income = TextField()
-            expense = TextField()
+            weather = CharField(null=True)
+            location = CharField(null=True)
             mood = TextField()
-            thoughts = TextField()
+            activities = TextField()
+            reflection = TextField()
             plan = TextField()
+            other = TextField(null=True)
 
         class UserProfile(BaseModel):
             name = CharField(null=True)
@@ -84,23 +85,25 @@ class DiaryDB:
 
     def get_questions(self):
         return [
+            ('weather', '🌤 天气'),
+            ('location', '📍 位置'),
+            ('mood', '🙂 心情评分'),
             ('activities', '💬 做了什么'),
-            ('income', '💰 收入'),
-            ('expense', '💸 支出'),
-            ('mood', '🙂 情绪评分'),
-            ('thoughts', '💭 想法'),
-            ('plan', '📌 明日计划')
+            ('reflection', '📝 感受和反思'),
+            ('plan', '📌 明日计划'),
+            ('other', '🆕 写点别的')
         ]
 
     def add_record(self, record: Dict[str, str]):
         self.Diary.create(
             date=self.today(),
-            activities=record['activities'],
-            income=record['income'],
-            expense=record['expense'],
+            weather=record['weather'],
+            location=record['location'],
             mood=record['mood'],
-            thoughts=record['thoughts'],
-            plan=record['plan']
+            activities=record['activities'],
+            reflection=record['reflection'],
+            plan=record['plan'],
+            other=record['other']
         )
 
     def get_all_records(self) -> List[Dict[str, str]]:
@@ -108,12 +111,13 @@ class DiaryDB:
         return [
             {
                 'date': rec.date.strftime('%Y-%m-%d'),
-                'activities': rec.activities,
-                'income': rec.income,
-                'expense': rec.expense,
-                'mood': rec.mood,
-                'thoughts': rec.thoughts,
-                'plan': rec.plan,
+                'weather': str(rec.weather) if rec.weather is not None else '',
+                'location': str(rec.location) if rec.location is not None else '',
+                'mood': str(rec.mood) if rec.mood is not None else '',
+                'activities': str(rec.activities) if rec.activities is not None else '',
+                'reflection': str(rec.reflection) if rec.reflection is not None else '',
+                'plan': str(rec.plan) if rec.plan is not None else '',
+                'other': str(rec.other) if rec.other is not None else '',
             }
             for rec in query
         ]
@@ -142,7 +146,6 @@ class DiaryDB:
             record = self.Diary.select().where(self.Diary.date == self.today()).first()
             return record.mood if record else '未填写'
         return '未填写'
-
     def get_profile(self) -> dict:
         profile = self.UserProfile.select().first()
         if profile:
@@ -216,7 +219,7 @@ class DiaryDB:
                 'created_at': todo.created_at.strftime('%Y-%m-%d %H:%M'),
                 'updated_at': todo.updated_at.strftime('%Y-%m-%d %H:%M')
             }
-        return None
+        return {}
 
     def update_todo(self, todo_id: int, data: dict):
         """更新待做计划"""
@@ -418,3 +421,4 @@ class DiaryDB:
             'total_records_today': total_records_today,
             'streak': streak
         }
+
