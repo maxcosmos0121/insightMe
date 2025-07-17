@@ -410,3 +410,66 @@ def checkin_history():
     }
 
     return render_template('checkin/checkin_history.html', items=items, records=records, selected_item_id=item_id, days=days, stats=stats)
+
+
+@main_bp.route('/inspiration', methods=['GET', 'POST'])
+def inspiration():
+    if 'username' not in session:
+        return redirect(url_for('main.login'))
+    from datetime import datetime
+    error = None
+    inspirations = []
+    file_path = f'inspiration_{session["username"]}.txt'
+    # 处理POST请求，添加或删除灵感
+    if request.method == 'POST':
+        delete_time = request.form.get('delete_time')
+        if delete_time:
+            # 删除指定时间的灵感
+            try:
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    lines = f.readlines()
+                with open(file_path, 'w', encoding='utf-8') as f:
+                    for line in lines:
+                        if not line.startswith(delete_time):
+                            f.write(line)
+            except FileNotFoundError:
+                pass
+            return redirect(url_for('main.inspiration'))
+        else:
+            content = request.form.get('content', '').strip()
+            if not content:
+                error = '内容不能为空'
+            else:
+                with open(file_path, 'a', encoding='utf-8') as f:
+                    f.write(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\t{content}\n")
+                return redirect(url_for('main.inspiration'))
+    # 读取历史灵感
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            for line in f:
+                parts = line.strip().split('\t', 1)
+                if len(parts) == 2:
+                    inspirations.append({'datetime': parts[0], 'content': parts[1]})
+    except FileNotFoundError:
+        pass
+    inspirations = inspirations[::-1]  # 新的在前
+    return render_template('inspiration/history.html', inspirations=inspirations, error=error)
+
+
+@main_bp.route('/inspiration/add', methods=['GET', 'POST'])
+def inspiration_add():
+    if 'username' not in session:
+        return redirect(url_for('main.login'))
+    from datetime import datetime
+    error = None
+    now = datetime.now().strftime('%Y-%m-%d %H:%M')
+    if request.method == 'POST':
+        content = request.form.get('content', '').strip()
+        if not content:
+            error = '内容不能为空'
+        else:
+            file_path = f'inspiration_{session["username"]}.txt'
+            with open(file_path, 'a', encoding='utf-8') as f:
+                f.write(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\t{content}\n")
+            return redirect(url_for('main.inspiration'))
+    return render_template('inspiration/add.html', error=error, now=now)
