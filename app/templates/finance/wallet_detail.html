@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ wallet.name }} - 钱包明细 - InsightMe</title>
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/common.css') }}" rel="stylesheet">
+    <style>
+        .wallet-info-card {
+            background: #e3f0ff;
+            border-radius: 0.8rem;
+            padding: 1rem 1.2rem;
+            margin-bottom: 1rem;
+            border: 1px solid #b6d4fe;
+        }
+        .record-card {
+            background: #fffbe6;
+            border-radius: 0.7rem;
+            margin-bottom: 0.7rem;
+            padding: 0.7rem 1rem 0.5rem 1rem;
+            box-shadow: 0 1px 4px 0 rgba(200, 180, 80, 0.06);
+            border: 1px solid #ffeeb8;
+            position: relative;
+        }
+        .record-main-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .record-badge {
+            font-size: 0.98rem;
+            border-radius: 0.5rem;
+            padding: 0.18em 0.7em 0.18em 0.5em;
+            margin-right: 0.5em;
+            background: #f3f4f6;
+            color: #333;
+            display: inline-block;
+        }
+        .record-type-支出 .record-badge { background: #ffe4e6; color: #e11d48; }
+        .record-type-收入 .record-badge { background: #e8f5e9; color: #059669; }
+        .record-type-投资 .record-badge { background: #e0e7ff; color: #2563eb; }
+        .record-type-支出 .record-amount { color: #e11d48; }
+        .record-type-收入 .record-amount { color: #059669; }
+        .record-type-投资 .record-amount { color: #2563eb; }
+        .record-amount {
+            font-size: 1.18rem;
+            font-weight: 700;
+            min-width: 90px;
+            text-align: right;
+        }
+        .record-meta-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.93rem;
+            color: #b08900;
+            margin-top: 0.2em;
+        }
+        .record-actions {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.7rem;
+            z-index: 2;
+        }
+        @media (max-width: 768px) {
+            .wallet-info-card { padding: 0.7rem 0.5rem; }
+            .record-card { padding: 0.6rem 0.5rem 0.4rem 0.5rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="card-common">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="page-title">💰 {{ wallet.name }} <span class="fs-6 text-secondary">({{ wallet.type }})</span></div>
+        <div>
+            <a class="btn btn-primary me-2" href="{{ url_for('finance.add_record', wallet_id=wallet.id) }}">添加记录</a>
+            <a class="btn btn-outline-primary" href="{{ url_for('finance.wallets') }}">返回钱包列表</a>
+        </div>
+    </div>
+    <hr>
+    <div class="wallet-info-card mb-3">
+        <div class="mb-2"><strong>类型：</strong>{{ wallet.type }}</div>
+        <div class="mb-2"><strong>余额：</strong>¥{{ '%.2f' % wallet.balance }}</div>
+        {% if wallet.remark %}
+        <div class="mb-2"><strong>备注：</strong>{{ wallet.remark }}</div>
+        {% endif %}
+        <div class="mb-2"><strong>创建时间：</strong>{{ wallet.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
+    </div>
+    <div>
+        <h5 class="mb-3">理财记录</h5>
+        {% if records and records|length > 0 %}
+        <div>
+            {% for rec in records %}
+            <div class="record-card record-type-{{ rec.record_type }}">
+                <div class="record-actions">
+                    <a href="{{ url_for('finance.edit_record', record_id=rec.id) }}" class="btn btn-sm btn-outline-success me-1">编辑</a>
+                    <a href="{{ url_for('finance.delete_record', record_id=rec.id) }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('确定要删除该记录吗？')">删除</a>
+                </div>
+                <div class="record-main-row" style="padding-right: 120px;">
+                    <div>
+                        <span class="record-badge">
+                            {% if rec.record_type == '支出' %}💸{% elif rec.record_type == '收入' %}💰{% elif rec.record_type == '转出' %}🔄{% elif rec.record_type == '转入' %}⬅️{% endif %}
+                            {{ rec.record_type }}
+                        </span>
+                        {% if rec.category %}<span class="badge bg-secondary-subtle text-secondary small">{{ rec.category }}</span>{% endif %}
+                        {% if rec.record_type == '转出' and rec.to_wallet_id %}
+                            <span class="badge bg-info-subtle text-info small ms-2">→
+                                {% for w in wallets %}{% if w.id == rec.to_wallet_id %}{{ w.name }}{% endif %}{% endfor %}
+                            </span>
+                        {% endif %}
+                        {% if rec.record_type == '转入' and rec.to_wallet_id %}
+                            <span class="badge bg-success-subtle text-success small ms-2">来自
+                                {% for w in wallets %}{% if w.id == rec.to_wallet_id %}{{ w.name }}{% endif %}{% endfor %}
+                            </span>
+                        {% endif %}
+                    </div>
+                    <div class="record-amount">¥{{ '%.2f' % rec.amount }}</div>
+                </div>
+                <div class="record-meta-row">
+                    <span>{{ rec.time.strftime('%Y-%m-%d %H:%M') }}</span>
+                    <span class="text-muted small">{{ rec.remark }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-secondary">暂无理财记录。</p>
+        {% endif %}
+    </div>
+</div>
+</body>
+</html> 

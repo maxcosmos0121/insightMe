@@ -69,13 +69,38 @@ class DiaryDB:
             mood = CharField(null=True)  # 打卡时的心情
             created_at = DateTimeField(default=datetime.now)  # 创建时间
 
+        class Wallet(BaseModel):
+            id = AutoField(primary_key=True)
+            user_id = IntegerField(null=False, index=True)
+            name = CharField(null=False)
+            type = CharField(null=False)  # 电子钱包/银行卡/现金等
+            balance = FloatField(default=0.0)
+            remark = TextField(null=True)
+            created_at = DateTimeField(default=datetime.now)
+            # 不需要 records 字段，peewee会自动通过backref建立关系
+
+        class FinanceRecord(BaseModel):
+            id = AutoField(primary_key=True)
+            user_id = IntegerField(null=False, index=True)
+            wallet_id = ForeignKeyField(Wallet, backref='records', null=False)
+            record_type = CharField(null=False)  # 支出/收入/转出/转入
+            amount = FloatField(null=False)
+            category = CharField(null=True)  # 分类
+            time = DateTimeField(default=datetime.now)
+            remark = TextField(null=True)
+            to_wallet_id = IntegerField(null=True)  # 目标钱包，仅转出/转入时用
+            related_record_id = IntegerField(null=True)  # 关联的转入/转出记录id
+            created_at = DateTimeField(default=datetime.now)
+
         self.Diary = Diary
         self.UserProfile = UserProfile
         self.Todo = Todo
         self.CheckinItem = CheckinItem
         self.CheckinRecord = CheckinRecord
+        self.Wallet = Wallet
+        self.FinanceRecord = FinanceRecord
         self.db.connect(reuse_if_open=True)
-        self.db.create_tables([self.Diary, self.UserProfile, self.Todo, self.CheckinItem, self.CheckinRecord])
+        self.db.create_tables([self.Diary, self.UserProfile, self.Todo, self.CheckinItem, self.CheckinRecord, self.Wallet, self.FinanceRecord])
 
     def today(self):
         return datetime.now().strftime('%Y-%m-%d')
@@ -346,8 +371,8 @@ class DiaryDB:
         self.CheckinRecord.create(
             item_id=item_id,
             checkin_date=self.today(),
-            note=note,
-            mood=mood
+            note=note if note is not None else '',
+            mood=mood if mood is not None else ''
         )
         return True, "打卡成功"
 
@@ -358,8 +383,14 @@ class DiaryDB:
             query = query.where(self.CheckinRecord.item_id == item_id)
         
         # 限制查询天数
-        start_date = datetime.now().date() - timedelta(days=days)
-        query = query.where(self.CheckinRecord.checkin_date >= start_date)
+        start_date = (datetime.now() - timedelta(days=days)).date()
+        # 确保start_date为字符串格式，与CheckinRecord.checkin_date类型一致
+        if hasattr(self.CheckinRecord.checkin_date, 'python_value'):
+            # peewee的DateField通常与date类型兼容，但如果有问题，转为字符串
+            start_date_str = start_date.strftime('%Y-%m-%d')
+            query = query.where(self.CheckinRecord.checkin_date >= start_date_str)
+        else:
+            query = query.where(self.CheckinRecord.checkin_date >= start_date)
         query = query.order_by(self.CheckinRecord.checkin_date.desc())
         
         records = []
@@ -371,8 +402,8 @@ class DiaryDB:
                 'item_title': item.title if item else '未知项目',
                 'item_icon': item.icon if item else '✅',
                 'checkin_date': record.checkin_date.strftime('%Y-%m-%d'),
-                'note': record.note,
-                'mood': record.mood,
+                'note': record.note if record.note is not None else '',
+                'mood': record.mood if record.mood is not None else '',
                 'created_at': record.created_at.strftime('%Y-%m-%d %H:%M')
             })
         return records

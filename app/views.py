@@ -2,6 +2,8 @@ from flask import Blueprint, render_template, request, redirect, url_for, sessio
 
 from app.auth import UserAuth
 from app.models import DiaryDB
+from datetime import datetime
+from collections import defaultdict
 
 diary_db = None
 user_auth = UserAuth()
@@ -161,8 +163,6 @@ def add_todo():
         return redirect(url_for('main.login'))
 
     if request.method == 'POST':
-        from datetime import datetime
-
         # 处理时间字段
         planned_start = request.form.get('planned_start')
         planned_end = request.form.get('planned_end')
@@ -187,8 +187,6 @@ def edit_todo(todo_id):
         return redirect(url_for('main.login'))
 
     if request.method == 'POST':
-        from datetime import datetime
-
         # 处理时间字段
         planned_start = request.form.get('planned_start')
         planned_end = request.form.get('planned_end')
@@ -416,7 +414,6 @@ def checkin_history():
 def inspiration():
     if 'username' not in session:
         return redirect(url_for('main.login'))
-    from datetime import datetime
     error = None
     inspirations = []
     file_path = f'inspiration_{session["username"]}.txt'
@@ -460,7 +457,6 @@ def inspiration():
 def inspiration_add():
     if 'username' not in session:
         return redirect(url_for('main.login'))
-    from datetime import datetime
     error = None
     now = datetime.now().strftime('%Y-%m-%d %H:%M')
     if request.method == 'POST':
@@ -473,3 +469,300 @@ def inspiration_add():
                 f.write(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\t{content}\n")
             return redirect(url_for('main.inspiration'))
     return render_template('inspiration/add.html', error=error, now=now)
+
+finance_bp = Blueprint('finance', __name__, url_prefix='/finance')
+
+@finance_bp.route('/wallets')
+def wallets():
+    if 'username' not in session:
+        return redirect(url_for('main.login'))
+    db = DiaryDB(session['username'])
+    wallets = db.Wallet.select().order_by(db.Wallet.created_at.desc())
+    return render_template('finance/wallets.html', wallets=wallets)
+
+@finance_bp.route('/wallet/add', methods=['GET', 'POST'])
+def add_wallet():
+    if 'username' not in session:
+        return redirect(url_for('main.login'))
+    db = DiaryDB(session['username'])
+    error = None
+    if request.method == 'POST':
+        name = request.form.get('name', '').strip()
+        type_ = request.form.get('type', '').strip()
+        balance = request.form.get('balance', '0').strip()
+        remark = request.form.get('remark', '').strip()
+        if not name or not type_:
+            error = '钱包名称和类型不能为空'
+        else:
+            try:
+                balance_val = float(balance)
+            except ValueError:
+                error = '金额格式不正确'
+            else:
+                db.Wallet.create(name=name, type=type_, balance=balance_val, remark=remark, user_id=1)  # user_id=1为示例，实际应取当前用户id
+                return redirect(url_for('finance.wallets'))
+    return render_template('finance/add_wallet.html', wallet=None, error=error)
+
+@finance_bp.route('/wallet/edit/<int:wallet_id>', methods=['GET', 'POST'])
+def edit_wallet(wallet_id):
+    if 'username' not in session:
+        return redirect(url_for('main.login'))
+    db = DiaryDB(session['username'])
+    wallet = db.Wallet.get_or_none(db.Wallet.id == wallet_id)
+    if not wallet:
+        return redirect(url_for('finance.wallets'))
+    error = None
+    if request.method == 'POST':
+        name = request.form.get('name', '').strip()
+        type_ = request.form.get('type', '').strip()
+        balance = request.form.get('balance', '0').strip()
+        remark = request.form.get('remark', '').strip()
+        if not name or not type_:
+            error = '钱包名称和类型不能为空'
+        else:
+            try:
+                balance_val = float(balance)
+            except ValueError:
+                error = '金额格式不正确'
+            else:
+                wallet.name = name
+                wallet.type = type_
+                wallet.balance = balance_val
+                wallet.remark = remark
+                wallet.save()
+                return redirect(url_for('finance.wallets'))
+    return render_template('finance/add_wallet.html', wallet=wallet, error=error)
+
+@finance_bp.route('/wallet/delete/<int:wallet_id>')
+def delete_wallet(wallet_id):
+    if 'username' not in session:
+        return redirect(url_for('main.login'))
+    db = DiaryDB(session['username'])
+    wallet = db.Wallet.get_or_none(db.Wallet.id == wallet_id)
+    if wallet:
+        wallet.delete_instance()
+    return redirect(url_for('finance.wallets'))
+
+@finance_bp.route('/wallet/<int:wallet_id>')
+def wallet_detail(wallet_id):
+    if 'username' not in session:
+        return redirect(url_for('main.login'))
+    db = DiaryDB(session['username'])
+    wallet = db.Wallet.get_or_none(db.Wallet.id == wallet_id)
+    if not wallet:
+        return redirect(url_for('finance.wallets'))
+    records = db.FinanceRecord.select().where(db.FinanceRecord.wallet_id == wallet_id).order_by(db.FinanceRecord.time.desc())
+    return render_template('finance/wallet_detail.html', wallet=wallet, records=records)
+
+@finance_bp.route('/record/add/<int:wallet_id>', methods=['GET', 'POST'])
+def add_record(wallet_id):
+    if 'username' not in session:
+        return redirect(url_for('main.login'))
+    db = DiaryDB(session['username'])
+    wallet = db.Wallet.get_or_none(db.Wallet.id == wallet_id)
+    wallets = db.Wallet.select().where(db.Wallet.id != wallet_id)
+    if not wallet:
+        return redirect(url_for('finance.wallets'))
+    error = None
+    if request.method == 'POST':
+        record_type = request.form.get('record_type', '').strip()
+        amount = request.form.get('amount', '').strip()
+        category = request.form.get('category', '').strip()
+        time_str = request.form.get('time', '').strip()
+        remark = request.form.get('remark', '').strip()
+        to_wallet_id = request.form.get('to_wallet_id') if record_type == '转出' else None
+        if not record_type or not amount or (record_type == '转出' and not to_wallet_id):
+            error = '类型、金额和目标钱包（转出）不能为空'
+        else:
+            try:
+                amount_val = float(amount)
+                time_val = datetime.strptime(time_str, '%Y-%m-%dT%H:%M') if time_str else datetime.now()
+            except ValueError:
+                error = '金额或时间格式不正确'
+            else:
+                related_record_id = None
+                if record_type == '支出':
+                    wallet.balance -= amount_val
+                    wallet.save()
+                elif record_type == '收入':
+                    wallet.balance += amount_val
+                    wallet.save()
+                elif record_type == '转出':
+                    wallet.balance -= amount_val
+                    wallet.save()
+                    to_wallet = db.Wallet.get_or_none(db.Wallet.id == int(to_wallet_id))
+                    if to_wallet:
+                        to_wallet.balance += amount_val
+                        to_wallet.save()
+                        # 先插入转出，后插入转入，转入的related_record_id指向转出
+                        out_record = db.FinanceRecord.create(wallet_id=wallet_id, user_id=1, record_type='转出', amount=amount_val, category=category, time=time_val, remark=remark, to_wallet_id=to_wallet_id)
+                        in_record = db.FinanceRecord.create(wallet_id=to_wallet.id, user_id=1, record_type='转入', amount=amount_val, category=category, time=time_val, remark=f'来自{wallet.name}：{remark}', to_wallet_id=wallet_id, related_record_id=out_record.id)
+                        out_record.related_record_id = in_record.id
+                        out_record.save()
+                        return redirect(url_for('finance.wallet_detail', wallet_id=wallet_id))
+                if record_type != '转出':
+                    db.FinanceRecord.create(wallet_id=wallet_id, user_id=1, record_type=record_type, amount=amount_val, category=category, time=time_val, remark=remark)
+                return redirect(url_for('finance.wallet_detail', wallet_id=wallet_id))
+    return render_template('finance/add_record.html', wallet=wallet, wallets=wallets, record=None, error=error)
+
+@finance_bp.route('/record/edit/<int:record_id>', methods=['GET', 'POST'])
+def edit_record(record_id):
+    if 'username' not in session:
+        return redirect(url_for('main.login'))
+    db = DiaryDB(session['username'])
+    record = db.FinanceRecord.get_or_none(db.FinanceRecord.id == record_id)
+    if not record:
+        return redirect(url_for('finance.wallets'))
+    wallet = db.Wallet.get_or_none(db.Wallet.id == record.wallet_id)
+    wallets = db.Wallet.select().where(db.Wallet.id != wallet.id)
+    error = None
+    if request.method == 'POST':
+        # 回滚原余额
+        if record.record_type == '支出':
+            wallet.balance += record.amount
+            wallet.save()
+        elif record.record_type == '收入':
+            wallet.balance -= record.amount
+            wallet.save()
+        elif record.record_type == '转出':
+            wallet.balance += record.amount
+            wallet.save()
+            # 同步删除原转入记录
+            if record.related_record_id:
+                in_record = db.FinanceRecord.get_or_none(db.FinanceRecord.id == record.related_record_id)
+                if in_record:
+                    to_wallet = db.Wallet.get_or_none(db.Wallet.id == in_record.wallet_id)
+                    if to_wallet:
+                        to_wallet.balance -= in_record.amount
+                        to_wallet.save()
+                    in_record.delete_instance()
+        elif record.record_type == '转入':
+            wallet.balance -= record.amount
+            wallet.save()
+            # 不允许直接编辑转入
+        # 新数据
+        record_type = request.form.get('record_type', '').strip()
+        amount = request.form.get('amount', '').strip()
+        category = request.form.get('category', '').strip()
+        time_str = request.form.get('time', '').strip()
+        remark = request.form.get('remark', '').strip()
+        to_wallet_id = request.form.get('to_wallet_id') if record_type == '转出' else None
+        if not record_type or not amount or (record_type == '转出' and not to_wallet_id):
+            error = '类型、金额和目标钱包（转出）不能为空'
+        else:
+            try:
+                amount_val = float(amount)
+                time_val = datetime.strptime(time_str, '%Y-%m-%dT%H:%M') if time_str else datetime.now()
+            except ValueError:
+                error = '金额或时间格式不正确'
+            else:
+                if record_type == '支出':
+                    wallet.balance -= amount_val
+                    wallet.save()
+                    record.record_type = record_type
+                    record.amount = amount_val
+                    record.category = category
+                    record.time = time_val
+                    record.remark = remark
+                    record.to_wallet_id = None
+                    record.related_record_id = None
+                    record.save()
+                elif record_type == '收入':
+                    wallet.balance += amount_val
+                    wallet.save()
+                    record.record_type = record_type
+                    record.amount = amount_val
+                    record.category = category
+                    record.time = time_val
+                    record.remark = remark
+                    record.to_wallet_id = None
+                    record.related_record_id = None
+                    record.save()
+                elif record_type == '转出':
+                    wallet.balance -= amount_val
+                    wallet.save()
+                    to_wallet = db.Wallet.get_or_none(db.Wallet.id == int(to_wallet_id))
+                    if to_wallet:
+                        to_wallet.balance += amount_val
+                        to_wallet.save()
+                        # 新建转入记录
+                        in_record = db.FinanceRecord.create(wallet_id=to_wallet.id, user_id=1, record_type='转入', amount=amount_val, category=category, time=time_val, remark=f'来自{wallet.name}：{remark}', to_wallet_id=wallet.id, related_record_id=record.id)
+                        record.record_type = '转出'
+                        record.amount = amount_val
+                        record.category = category
+                        record.time = time_val
+                        record.remark = remark
+                        record.to_wallet_id = to_wallet.id
+                        record.related_record_id = in_record.id
+                        record.save()
+                return redirect(url_for('finance.wallet_detail', wallet_id=wallet.id))
+    return render_template('finance/add_record.html', wallet=wallet, wallets=wallets, record=record, error=error)
+
+@finance_bp.route('/record/delete/<int:record_id>')
+def delete_record(record_id):
+    if 'username' not in session:
+        return redirect(url_for('main.login'))
+    db = DiaryDB(session['username'])
+    record = db.FinanceRecord.get_or_none(db.FinanceRecord.id == record_id)
+    wallet_id = record.wallet_id if record else None
+    if record:
+        wallet = db.Wallet.get_or_none(db.Wallet.id == record.wallet_id)
+        # 回滚余额
+        if record.record_type == '支出':
+            wallet.balance += record.amount
+            wallet.save()
+        elif record.record_type == '收入':
+            wallet.balance -= record.amount
+            wallet.save()
+        elif record.record_type == '转出':
+            wallet.balance += record.amount
+            wallet.save()
+            # 同步删除转入记录
+            if record.related_record_id:
+                in_record = db.FinanceRecord.get_or_none(db.FinanceRecord.id == record.related_record_id)
+                if in_record:
+                    to_wallet = db.Wallet.get_or_none(db.Wallet.id == in_record.wallet_id)
+                    if to_wallet:
+                        to_wallet.balance -= in_record.amount
+                        to_wallet.save()
+                    in_record.delete_instance()
+        elif record.record_type == '转入':
+            wallet.balance -= record.amount
+            wallet.save()
+        record.delete_instance()
+    if wallet_id:
+        return redirect(url_for('finance.wallet_detail', wallet_id=wallet_id))
+    return redirect(url_for('finance.wallets'))
+
+@finance_bp.route('/stats')
+def stats():
+    if 'username' not in session:
+        return redirect(url_for('main.login'))
+    db = DiaryDB(session['username'])
+    wallets = list(db.Wallet.select())
+    records = list(db.FinanceRecord.select())
+    # 总收入、总支出、结余
+    total_income = sum(r.amount for r in records if r.record_type == '收入')
+    total_expense = sum(r.amount for r in records if r.record_type == '支出')
+    total_balance = sum(w.balance for w in wallets)
+    # 分类统计
+    category_income = defaultdict(float)
+    category_expense = defaultdict(float)
+    for r in records:
+        if r.record_type == '收入':
+            category_income[r.category or '未分类'] += r.amount
+        elif r.record_type == '支出':
+            category_expense[r.category or '未分类'] += r.amount
+    # 月度收支趋势
+    from datetime import datetime
+    monthly_income = defaultdict(float)
+    monthly_expense = defaultdict(float)
+    for r in records:
+        ym = r.time.strftime('%Y-%m')
+        if r.record_type == '收入':
+            monthly_income[ym] += r.amount
+        elif r.record_type == '支出':
+            monthly_expense[ym] += r.amount
+    months = sorted(set(list(monthly_income.keys()) + list(monthly_expense.keys())))
+    trend = [{'month': m, 'income': monthly_income[m], 'expense': monthly_expense[m]} for m in months]
+    return render_template('finance/stats.html', wallets=wallets, total_income=total_income, total_expense=total_expense, total_balance=total_balance, category_income=category_income, category_expense=category_expense, trend=trend)

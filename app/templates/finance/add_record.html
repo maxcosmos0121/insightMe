@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ '编辑记录' if record else '添加记录' }} - {{ wallet.name }} - InsightMe</title>
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/common.css') }}" rel="stylesheet">
+    <style>
+        .form-label { font-weight: 500; }
+    </style>
+</head>
+<body>
+<div class="card-common">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="page-title">{{ '编辑记录' if record else '添加记录' }}</div>
+        <div>
+            <a class="btn btn-outline-primary" href="{{ url_for('finance.wallet_detail', wallet_id=wallet.id) }}">返回明细</a>
+        </div>
+    </div>
+    <hr>
+    {% if error %}
+    <div class="alert alert-danger py-2">{{ error }}</div>
+    {% endif %}
+    <form method="post">
+        <div class="mb-3">
+            <label class="form-label">类型</label>
+            <select class="form-select" name="record_type" id="recordTypeSelect" required onchange="toggleToWallet()">
+                <option value="支出" {% if record and record.record_type=='支出' %}selected{% endif %}>支出</option>
+                <option value="收入" {% if record and record.record_type=='收入' %}selected{% endif %}>收入</option>
+                <option value="转出" {% if record and record.record_type=='转出' %}selected{% endif %}>转出</option>
+            </select>
+        </div>
+        <div class="mb-3" id="toWalletDiv" style="display: none;">
+            <label class="form-label">目标钱包</label>
+            <select class="form-select" name="to_wallet_id">
+                <option value="">请选择</option>
+                {% for w in wallets %}
+                    {% if not record or w.id != wallet.id %}
+                    <option value="{{ w.id }}" {% if record and record.to_wallet_id==w.id %}selected{% endif %}>{{ w.name }}</option>
+                    {% endif %}
+                {% endfor %}
+            </select>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">金额</label>
+            <input class="form-control" name="amount" type="number" step="0.01" min="0" required value="{{ record.amount if record else '' }}">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">分类</label>
+            <input class="form-control" name="category" type="text" placeholder="如 餐饮/工资/股票" value="{{ record.category if record else '' }}">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">时间</label>
+            <input class="form-control" name="time" type="datetime-local" value="{{ record.time.strftime('%Y-%m-%dT%H:%M') if record else '' }}">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">备注</label>
+            <input class="form-control" name="remark" type="text" placeholder="可选" value="{{ record.remark if record else '' }}">
+        </div>
+        <button class="btn btn-success w-100" type="submit">保存</button>
+    </form>
+</div>
+<script>
+function toggleToWallet() {
+    var type = document.getElementById('recordTypeSelect').value;
+    document.getElementById('toWalletDiv').style.display = (type === '转出') ? '' : 'none';
+}
+document.addEventListener('DOMContentLoaded', function() {
+    toggleToWallet();
+});
+</script>
+</body>
+</html> 
